@@ -1,0 +1,162 @@
+[
+  {
+    "text": "Happy to share the company's new sustainability initiative report — available on our public website.",
+    "label": "Public"
+  },
+  {
+    "text": "Congratulations to all participants in this year's charity run. Photos are on the company Facebook page.",
+    "label": "Public"
+  },
+  {
+    "text": "The office will be closed on Monday for the national holiday. Enjoy the long weekend.",
+    "label": "Public"
+  },
+  {
+    "text": "Our Q2 product update is live. Check the release notes at docs.company.com.",
+    "label": "Public"
+  },
+  {
+    "text": "We are excited to welcome three new members to our board of directors.",
+    "label": "Public"
+  },
+  {
+    "text": "name=Alice+Brown&subject=Partnership+Inquiry&message=We+would+love+to+collaborate+on+a+joint+webinar",
+    "label": "Public"
+  },
+  {
+    "text": "GET /about-us HTTP/1.1\nHost: company.com\nUser-Agent: Mozilla/5.0",
+    "label": "Public"
+  },
+  {
+    "text": "Thank you for contacting support. A representative will respond within 24 hours.",
+    "label": "Public"
+  },
+  {
+    "text": "The updated employee travel policy is attached for your reference. Please review before your next business trip.",
+    "label": "Internal"
+  },
+  {
+    "text": "Internal only: Q3 project tracker spreadsheet. Do not share outside the department.",
+    "label": "Internal"
+  },
+  {
+    "text": "Please find the updated sprint backlog. This is for the engineering team only.",
+    "label": "Internal"
+  },
+  {
+    "text": "Staff reminder: submit timesheets by end of day Friday. Payroll requires this for processing.",
+    "label": "Internal"
+  },
+  {
+    "text": "POST /sharepoint/docs HTTP/1.1\nfilename=sales_targets_H2.xlsx\nFor management review only.",
+    "label": "Internal"
+  },
+  {
+    "text": "Internal escalation: the customer outage ticket has been assigned to Tier 2. Not for client disclosure.",
+    "label": "Internal"
+  },
+  {
+    "text": "The internal knowledge base article on VPN setup has been updated. IT team use only.",
+    "label": "Internal"
+  },
+  {
+    "text": "Please review the attached draft of the internal communications plan for Q4 before Friday's meeting.",
+    "label": "Internal"
+  },
+  {
+    "text": "This report summarizes our revenue performance for the quarter. Distribution is limited to the finance team.",
+    "label": "Confidential"
+  },
+  {
+    "text": "The board has been presented with three strategic options for the coming fiscal year. Analysis is attached.",
+    "label": "Confidential"
+  },
+  {
+    "text": "Updated financial model showing two downside scenarios for investor relations planning.",
+    "label": "Confidential"
+  },
+  {
+    "text": "The proposed org restructuring affects the product and engineering divisions. Not for general circulation.",
+    "label": "Confidential"
+  },
+  {
+    "text": "Attached is the personnel review for the regional sales director. For HR and executive review only.",
+    "label": "Confidential"
+  },
+  {
+    "text": "The preliminary due diligence findings on the target company have been compiled by the deal team.",
+    "label": "Confidential"
+  },
+  {
+    "text": "A draft of the proposed partnership agreement is attached. Legal has not yet reviewed.",
+    "label": "Confidential"
+  },
+  {
+    "text": "Revised guidance for Q4 has been prepared for the CFO. Contains forward-looking financial estimates.",
+    "label": "Confidential"
+  },
+  {
+    "text": "The attached memo outlines three potential outcomes of the ongoing regulatory review.",
+    "label": "Confidential"
+  },
+  {
+    "text": "Compensation benchmarking results for the senior leadership team are attached for committee review.",
+    "label": "Confidential"
+  },
+  {
+    "text": "Patient record: Maria Santos, DOB 1979-09-21, diagnosed with hypertension, prescribed lisinopril 10mg.",
+    "label": "Restricted"
+  },
+  {
+    "text": "Mastercard: 5500 0055 5555 4444, CVV 902, expiry 08/27, billing zip 90210.",
+    "label": "Restricted"
+  },
+  {
+    "text": "DB_HOST=prod-db.internal\nDB_USER=root\nDB_PASS=Xk9!mP2#vQ\nDB_NAME=customers",
+    "label": "Restricted"
+  },
+  {
+    "text": "BEGIN RSA PRIVATE KEY\nMIIEpAIBAAKCAQEA3Tl9Vz2rHqJ0D7mN4wXbKcY8pLfG1sOuiA==\nEND RSA PRIVATE KEY",
+    "label": "Restricted"
+  },
+  {
+    "text": "IBAN: GB29NWBK60161331926819. Transfer amount: GBP 175,000. Beneficiary: Holdings Ltd.",
+    "label": "Restricted"
+  },
+  {
+    "text": "Full name: Robert Chen, SSN: 456-78-9012, DOB: 1965-11-03, employer: Acme Corp.",
+    "label": "Restricted"
+  },
+  {
+    "text": "Export of user table: id, email, password_hash, credit_card_number, billing_address for 12,000 rows.",
+    "label": "Restricted"
+  },
+  {
+    "text": "Diagnosis: Stage 2 breast cancer. Treatment plan: chemotherapy, surgery. Patient ID: 8812234.",
+    "label": "Restricted"
+  },
+  {
+    "text": "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE\nAWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY",
+    "label": "Restricted"
+  },
+  {
+    "text": "ssn=987-65-4321&dob=1990-07-14&lastName=Williams&firstName=James&planId=HMO-44",
+    "label": "Restricted"
+  },
+  {
+    "text": "SELECT customer_id, card_number, cvv, expiry FROM payments WHERE created_at > '2024-01-01';",
+    "label": "Restricted"
+  },
+  {
+    "text": "Payroll export: employee_id, full_name, bank_routing, account_number, net_pay for March 2024.",
+    "label": "Restricted"
+  },
+  {
+    "text": "ICD-10: F32.1 (Major depressive disorder). Prescribed sertraline 50mg. NPI: 1922337654.",
+    "label": "Restricted"
+  },
+  {
+    "text": "Biometric export request: face embeddings and fingerprint templates for 450 employees. GDPR Article 9.",
+    "label": "Restricted"
+  }
+]

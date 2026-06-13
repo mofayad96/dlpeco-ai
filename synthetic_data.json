@@ -1,0 +1,794 @@
+
+[
+
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: Employee payroll export\nEmployee Name: Ahmed Hassan\nNational ID: 29001011234567\nSalary: $35000",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "Contains literal NID value and salary — raw PII"
+  },
+  {
+    "text": "[EXTERNAL] [OUTBOUND] [SMTP]\nSubject: Medical patient record\nPatient Name: Mohamed Ali\nDiagnosis: Type II Diabetes\nPrescription: Metformin 500mg",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Medical"], 
+    "reason": "Medical record with diagnosis and prescription — PHI"
+  },
+  {
+    "text": "[INTERNAL] [HTTP]\nURL: https://internal.company.com/login\nUsername: admin123\nPassword: securepass456",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "Plaintext credentials in HTTP traffic"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nPOST /api/export HTTP/1.1\nHost: internal.company.com\n{\"employee_id\": 1001, \"name\": \"Ahmed Hassan\", \"national_id\": \"29001011234567\", \"salary\": 35000}",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"],
+    "reason": "JSON payload with literal NID and salary — raw PII"
+  },
+  {
+    "text": "[INTERNAL] [HTTPS]\nPOST /graphql HTTP/1.1\nHost: api.company.com\n{\"query\": \"{employees{id,name,national_id,salary}}\"}",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"],
+    "reason": "GraphQL query explicitly requesting national_id and salary fields — PII exposure"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nPOST /api/export HTTP/1.1\nHost: internal.company.com\nAttachment: payroll_Q4.xlsx",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "Payroll spreadsheet export to external host"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nPOST /contact HTTP/1.1\nHost: www.company.com\nnid=29001011234567&patient_name=Mohamed_Ali",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Medical"], 
+    "reason": "URL-encoded NID and patient name in POST body"
+  },
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: Base64 encoded JWT token\nToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "JWT token in email — credential exposure"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nGET /api/v1/users.sql HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"],
+    "reason": "Request for SQL database file from external host — data exfiltration"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nGET /api/source-code HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"],
+    "reason": "External request for proprietary source code"
+  },
+  {
+    "text": "[INTERNAL] [HTTPS]\nPOST /api/user-api-key HTTP/1.1\nHost: internal.company.com\n{\"api_key\": \"secretpassword123\"}",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "API key in plaintext JSON payload"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nPOST /api/source-code HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "POST to source code endpoint from external host"
+  },
+  {
+    "text": "POST /upload HTTP/1.1\nHost: dropbox.com\nfilename=payroll.csv",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "Payroll file upload to personal cloud storage (shadow IT)"
+  },
+  {
+    "text": "{\n  users {\n     id\n     email\n     ssn\n     credit_card\n     salary\n  }\n}",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR", "CustomerData"], 
+    "reason": "GraphQL requesting SSN, credit card, salary — multiple PII fields"
+  },
+  {
+    "text": "POST /api/upload HTTP/1.1\nHost: api.example.com\nfilename=employee_records.csv",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"],
+    "reason": "Employee records CSV upload"
+  },
+  {
+    "text": "POST /upload HTTP/1.1\nHost: dropbox.com\nfilename=employee_data.csv",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"],
+    "reason": "Employee data CSV upload to cloud storage"
+  },
+  {
+    "text": "GET /export/data.csv HTTP/1.1\nHost: example.com",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "Request to export data as CSV — likely contains PII"
+  },
+  {
+    "text": "POST /api/upload HTTP/1.1\nHost: api.example.com\nfilename=employee_info.csv",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "Employee info CSV upload"
+  },
+  {
+    "text": "{\n  'national_id': '29001011234567',\n  'address': '123 Main St.',\n  'salary': 35000\n}",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"],
+    "reason": "JSON with literal NID value — raw PII. NOTE: was wrongly labeled Confidential"
+  },
+  {
+    "text": "GET /data/employee_info HTTP/1.1\nHost: data.example.net",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "External request for employee info endpoint"
+  },
+  {
+    "text": "From: legal@company.com\nTo: compliance.manager@company.com\nSubject: Compliance Audit Report Q1\nBody: Please review the attached report for any discrepancies.",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Legal", "Security"],
+    "reason": "Compliance audit report — restricted to authorised recipients only"
+  },
+
+  
+  {
+    "text": "From: dr.hassan@hospital.com\nTo: patient@gmail.com\nSubject: Your HIV test results\nDear Ahmed, your HIV test came back positive. NID: 29001011234567. Please call us.",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Medical"],
+    "reason": "HIV diagnosis + NID sent to external personal email — PHI + PII"
+  },
+  {
+    "text": "POST /upload HTTP/1.1\nHost: wetransfer.com\nContent-Type: multipart/form-data\nfilename=customer_db_export.csv\n\ncustomer_id,national_id,credit_card,cvv,billing_address — 80000 records",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["CustomerData"], 
+    "reason": "Customer database export with NID, credit card, CVV to cloud file sharing"
+  },
+  {
+    "text": "DB_HOST=prod-db.internal\nDB_USER=root\nDB_PASS=Xk9!mP2\nDB_NAME=customers_prod",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "Production database credentials in plaintext"
+  },
+  {
+    "text": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "AWS access keys — cloud credential exposure"
+  },
+  {
+    "text": "SELECT * FROM customers; -- full table dump including card_number, cvv, billing_address, national_id",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security", "CustomerData"],
+    "reason": "SQL query dumping full customer PII table"
+  },
+  {
+    "text": "VISA card: 4532 1488 0343 6467 exp 09/28 CVV 341 billing zip 10001\nCardholder: Ahmed Hassan",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["CustomerData"], 
+    "reason": "Complete payment card data including CVV — PCI-DSS Restricted"
+  },
+  {
+    "text": "SWIFT transfer: IBAN EG380019000500000000263180002\nAmount: EGP 450,000\nBeneficiary: Mohamed Ali",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Finance"], 
+    "reason": "Bank account IBAN and transfer amount — financial PII"
+  },
+  {
+    "text": "PRESCRIPTION\nPatient: Sarah Johnson DOB: 03/15/1990\nMedication: Adderall XR 20mg\nDEA: AB1234563\nDr. Smith MD",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Medical"], 
+    "reason": "Medical prescription with DEA number, DOB, controlled substance"
+  },
+  {
+    "text": "BEGIN RSA PRIVATE KEY\nMIIEowIBAAKCAQEA2a2rwplBQLzHPZe5RJK...\nEND RSA PRIVATE KEY",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "RSA private key — critical credential exposure"
+  },
+  {
+    "text": "Cookie: session_id=abc123; auth_token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxMjM0fQ; db_password=Admin123",
+    "channel": "web", "language": "en", "label": "Restricted",
+    "domains": ["Security"], 
+    "reason": "Session cookie containing auth token and database password"
+  },
+  {
+    "text": "Employee payroll export Q4:\nEmployee ID, Name, NID, Bank Account, Routing, Net Salary\n1001, Ahmed Hassan, 29001011234567, 1234567890123456, 021000021, 25000",
+    "channel": "email", "language": "en", "label": "Restricted",
+    "domains": ["HR"], 
+    "reason": "Full payroll record with NID, bank account, salary — multiple PII fields"
+  },
+ 
+  {
+    "text": "[EXTERNAL] [SMTP]\nSubject: Confidential M&A documents\nContent: Draft merger valuation and acquisition timeline.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Finance", "Legal"],
+    "reason": "M&A strategy document — business confidential, no raw PII"
+  },
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: Internal legal discussion\nContent: Details of internal contract negotiations.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Legal"], 
+    "reason": "Internal contract negotiations — confidential business matter"
+  },
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: Board meeting minutes\nContent: Minutes of the Q4 board meeting.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Finance"], 
+    "reason": "Board minutes — confidential governance document"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nGET /api/v2/security-architecture HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Confidential",
+    "domains": ["Security"], 
+    "reason": "Security architecture document — confidential but not raw PII"
+  },
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: Financial forecast\nContent: Detailed financial projections for the next fiscal year.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Finance"], 
+    "reason": "Financial forecast — confidential business planning document"
+  },
+  {
+    "text": "From: hr.manager@company.com\nTo: legal@company.com\nSubject: New Product Strategy\nBody: Board approval pending. Do not share with external parties.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Finance"], 
+    "reason": "Pre-announcement product strategy — confidential"
+  },
+  {
+    "text": "From: finance.manager@company.com\nTo: hr.manager@company.com\nSubject: Salary Adjustments for Q1\nBody: Please review the attached document for Q1 salary adjustments.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["HR", "Finance"], 
+    
+    "reason": "Salary adjustment process — confidential HR/Finance matter. No literal values"
+  },
+  {
+    "text": "From: finance.manager@company.com\nTo: payroll@company.com\nSubject: Employee Salaries\nBody: Review the attached document for accuracy.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["HR", "Finance"], 
+    "reason": "Salary review communication — confidential. No literal PII values in text"
+  },
+  {
+    "text": "From: legal@company.com\nTo: hr.manager@company.com\nSubject: Confidential Legal Documents\nBody: Review the attached documents for compliance.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Legal"], 
+    "reason": "Legal documents for compliance review — confidential"
+  },
+  {
+    "text": "From: payroll@company.com\nTo: finance.manager@company.com\nSubject: Salary Adjustments\nBody: Please review the attached document for approval.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["HR", "Finance"],
+    
+    "reason": "Salary adjustment approval — confidential process, no literal values"
+  },
+  {
+    "text": "From: legal@company.com\nTo: hr.manager@company.com\nSubject: Legal Compliance Review\nBody: Review the attached documents for compliance with company policies.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Legal"], 
+    "reason": "Legal compliance review — confidential"
+  },
+  {
+    "text": "FROM: finance.manager@company.com\nTO: payroll@company.com\nSUBJECT: Employee Salaries\nBody: Review the attached document for accuracy.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["HR", "Finance"], 
+    "reason": "Salary review — confidential process"
+  },
+  {
+    "text": "The merger with AcmeCorp is planned for Q1. The board has not been informed yet. Strictly confidential.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Finance", "Legal"], 
+    "reason": "Pre-announcement M&A — material non-public information"
+  },
+  {
+    "text": "Attorney-client privileged: legal opinion on regulatory exposure in EU markets. Do not forward.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["Legal"], 
+    "reason": "Attorney-client privileged communication"
+  },
+  {
+    "text": "Layoff plan: 15 percent workforce reduction in Q1. HR and executives only. Embargoed.",
+    "channel": "email", "language": "en", "label": "Confidential",
+    "domains": ["HR"],
+    "reason": "Pre-announcement workforce reduction — confidential"
+  },
+  {
+    "text": "وثيقة سرية للغاية: خطة الاستحواذ على شركة المصريين للاتصالات، 2 مليار جنيه. للبورد بس",
+    "channel": "email", "language": "ar", "label": "Confidential",
+    "domains": ["Finance", "Legal"], 
+    "reason": "Arabic M&A acquisition plan restricted to board — no raw PII"
+  },
+  {
+    "text": "تقرير سري: التوقعات المالية للربع التالت بتظهر انخفاض 18 بالمئة. للإدارة العليا بس",
+    "channel": "email", "language": "ar", "label": "Confidential",
+    "domains": ["Finance"], 
+    "reason": "Arabic financial forecast — confidential strategic data, no raw PII"
+  },
+  {
+    "text": "خطة تقليص العمالة: تخفيض 200 وظيفة في الفروع. سري للإدارة العليا بس",
+    "channel": "email", "language": "ar", "label": "Confidential",
+    "domains": ["HR"],
+    "reason": "Arabic layoff plan — pre-announcement confidential"
+  },
+
+  
+  {
+    "text": "[INTERNAL] [HTTP]\nGET /admin/dashboard HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Internal admin dashboard access — no sensitive content"
+  },
+  {
+    "text": "[INTERNAL] [HTTPS]\nGET /api/v2/maintenance HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Internal maintenance endpoint — operational, not sensitive"
+  },
+  {
+    "text": "[EXTERNAL] [HTTPS]\nGET /api/v1/build-logs HTTP/1.1\nHost: internal.company.com",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Build logs — internal IT operational data"
+  },
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: IT maintenance notice\nContent: Maintenance of internal network equipment.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "IT maintenance notice — routine internal communication"
+  },
+  {
+    "text": "From: john.doe@example.com\nTo: jane.doe@another.org\nSubject: Meeting Reminder\nBody: Don't forget our meeting tomorrow at 10 AM.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["IT"],
+    "reason": "Meeting reminder — internal coordination, no sensitive content"
+  },
+  {
+    "text": "GET /api/users HTTP/1.1\nHost: example.com",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"],
+    "reason": "API request to users endpoint — internal system call, no PII in request"
+  },
+  {
+    "text": "FROM: admin@company.com\nTO: hr.manager@company.com\nSUBJECT: Employee Leave Requests\nBody: Review leave requests for the next month.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["HR"], 
+    "reason": "Leave request management — internal HR process, no PII values"
+  },
+  {
+    "text": "GET /api/v1/users HTTP/1.1\nHost: api.example.org",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Internal API request — no PII values in the request itself"
+  },
+  {
+    "text": "FROM: admin@company.com\nTO: hr.manager@company.com\nSUBJECT: Employee Onboarding Checklist\nBody: Review the checklist for new hires.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["HR"], 
+    "reason": "Onboarding checklist — internal process communication"
+  },
+  {
+    "text": "GET /api/v1/employees HTTP/1.1\nHost: api.example.net",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Internal employee endpoint request — no PII in request"
+  },
+  {
+    "text": "POST /api/v1/users HTTP/1.1\nHost: api.example.org",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Internal API POST — no sensitive payload in this request"
+  },
+  {
+    "text": "GET /data/employee_records HTTP/1.1\nHost: data.example.com",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["HR"], 
+    "reason": "GET request to employee records endpoint name — no actual data in request"
+  },
+  {
+    "text": "From: admin@company.com\nTo: hr.manager@company.com\nSubject: Employee Onboarding Checklist\nBody: Review the checklist for new hires.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["HR"], 
+    "reason": "Internal HR onboarding communication"
+  },
+  {
+    "text": "محضر اجتماع التيم — للاستخدام الداخلي بس. مش للشير برا الشركة",
+    "channel": "email", "language": "ar", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Arabic team meeting minutes — internal use only"
+  },
+ 
+  {
+    "text": "Dear team, VPN will be offline Saturday 8am for maintenance. Internal IT notice.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Standard IT maintenance notice"
+  },
+  {
+    "text": "Attached is the internal roadmap for Q4. Please do not share externally.",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Internal roadmap — internal distribution, not business-secret level"
+  },
+  {
+    "text": "POST /intranet/upload HTTP/1.1\nHost: internal.company.com\nfilename=org_chart_2024.pptx\nFor internal use only",
+    "channel": "web", "language": "en", "label": "Internal",
+    "domains": ["HR"],
+    "reason": "Org chart upload to internal intranet"
+  },
+  {
+    "text": "MEETING MINUTES\nDate: November 12\nAttendees: Engineering\nTopics: Sprint planning\nAction: Deploy v2.1 by Friday",
+    "channel": "email", "language": "en", "label": "Internal",
+    "domains": ["IT"], 
+    "reason": "Sprint meeting minutes — internal operational"
+  },
+
+  {
+    "text": "[EXTERNAL] [HTTPS]\nGET /public/contact HTTP/1.1\nHost: www.company.com\nUser-Agent: Mozilla/5.0 Chrome/91",
+    "channel": "web", "language": "en", "label": "Public",
+    "domains": ["Support"], 
+    "reason": "Public contact page GET request"
+  },
+  {
+    "text": "[INTERNAL] [SMTP]\nSubject: Newsletter email\nContent: News about company products and services.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Company newsletter — public marketing content"
+  },
+  {
+    "text": "From: john.doe@example.com\nTo: jane.doe@another.org\nSubject: Meeting Reminder\nBody: Don't forget our meeting tomorrow at 10 AM.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Non-sensitive meeting reminder between external parties"
+  },
+  {
+    "text": "<a href='https://example.com'>Click here</a> to view our latest product catalog.",
+    "channel": "web", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Public product catalog link"
+  },
+  {
+    "text": "From: sales@company.com\nTo: customer@example.org\nSubject: Order Confirmation\nBody: Thank you for your purchase. Your order details are attached.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Standard order confirmation — public transactional email"
+  },
+  {
+    "text": "From: support@company.com\nTo: user@example.net\nSubject: Support Ticket Response\nBody: We have reviewed your ticket and will get back to you shortly.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Support"], 
+    "reason": "Standard support acknowledgment"
+  },
+  {
+    "text": "From: newsletter@company.com\nTo: subscribers@list.org\nSubject: Quarterly Newsletter\nBody: Here's the latest update on our company's activities.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Company newsletter"
+  },
+  {
+    "text": "From: marketing@company.com\nTo: prospects@example.co\nSubject: Special Offer\nBody: Limited-time offer for new customers. Visit our website for more details.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Marketing promotional email"
+  },
+  {
+    "text": "From: press@company.com\nTo: media@press.org\nSubject: Press Release\nBody: Check out our latest press release on company achievements.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Press release — public by definition"
+  },
+  {
+    "text": "From: community@company.org\nTo: members@community.net\nSubject: Community Event Invitation\nBody: Join us at our upcoming event on June 15th.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Public event invitation"
+  },
+  {
+    "text": "POST /contact HTTP/1.1\nHost: www.company.com\nname=Jane+Doe&email=jane@gmail.com&message=Hello+I+would+like+more+info",
+    "channel": "web", "language": "en", "label": "Public",
+    "domains": ["Support"], 
+    "reason": "Public contact form submission — no PII beyond name/email"
+  },
+  {
+    "text": "GET /careers HTTP/1.1\nHost: company.com\nAccept: text/html",
+    "channel": "web", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Public careers page request"
+  },
+  {
+    "text": "Our new product launches next Monday. See the marketing brochure attached.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Product launch announcement — public"
+  },
+  {
+    "text": "The annual report is now publicly available on our website.",
+    "channel": "email", "language": "en", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Annual report publication — public"
+  },
+  {
+    "text": "يسعدنا الإعلان عن إطلاق منتجنا الجديد الأسبوع الجاي. كلكم مدعوين للحفل",
+    "channel": "email", "language": "ar", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Arabic product launch announcement — public"
+  },
+  {
+    "text": "تهانينا لفريق المبيعات على تحقيق 120 بالمئة من التارجت الربع ده!",
+    "channel": "email", "language": "ar", "label": "Public",
+    "domains": ["Marketing"],
+    "reason": "Arabic congratulations announcement — public internal celebration"
+  },
+  {
+    "text": "إعلان: إجازة رسمية بمناسبة عيد الأضحى المبارك من 15 لـ 19 يونيو",
+    "channel": "email", "language": "ar", "label": "Public",
+    "domains": ["Marketing"], 
+    "reason": "Arabic holiday notice — public announcement"
+  },
+  
+  {"text": "Our Q2 product update is now live. Check the release notes at docs.company.com for full details.", "label": "Public"},
+  {"text": "Version 4.1 is live. Release notes available on our public documentation portal.", "label": "Public"},
+  {"text": "The latest product update includes performance improvements. See release notes for details.", "label": "Public"},
+  {"text": "Q3 feature update is now available. Visit our changelog for the full list of improvements.", "label": "Public"},
+  {"text": "We have shipped our latest release. Full release notes are available on the website.", "label": "Public"},
+  {"text": "Thank you for contacting support. A representative will respond within 24 hours.", "label": "Public"},
+  {"text": "Thank you for reaching out. Our support team will get back to you shortly.", "label": "Public"},
+  {"text": "We have received your message. A member of our team will follow up with you soon.", "label": "Public"},
+  {"text": "Your support request has been logged. Expected response time is one business day.", "label": "Public"},
+  {"text": "Thanks for getting in touch. We will be in touch within one business day.", "label": "Public"},
+  {"text": "Your inquiry has been received. Our team will respond as soon as possible.", "label": "Public"},
+  {"text": "Support ticket opened. Reference: TKT-8821. We will be in touch shortly.", "label": "Public"},
+  {"text": "We appreciate you contacting us. A support agent will follow up by end of day.", "label": "Public"},
+  {"text": "Hello, thank you for your message. Someone from our customer success team will reach out soon.", "label": "Public"},
+  {"text": "Your request is being reviewed. A support representative will contact you within 24 hours.", "label": "Public"},
+  {"text": "GET /index.html HTTP/1.1\nHost: company.com\nUser-Agent: Mozilla/5.0\nAccept: text/html", "label": "Public"},
+  {"text": "GET /products HTTP/1.1\nHost: shop.company.com\nAccept: application/json\nUser-Agent: Chrome/120", "label": "Public"},
+  {"text": "GET /about HTTP/1.1\nHost: company.com\nAccept: text/html\nUser-Agent: Mozilla/5.0", "label": "Public"},
+  {"text": "GET /contact HTTP/1.1\nHost: company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /blog HTTP/1.1\nHost: company.com\nAccept: text/html\nUser-Agent: Safari/537", "label": "Public"},
+  {"text": "GET /careers HTTP/1.1\nHost: company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /pricing HTTP/1.1\nHost: company.com\nAccept: text/html\nUser-Agent: Mozilla/5.0", "label": "Public"},
+  {"text": "GET /faq HTTP/1.1\nHost: support.company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /docs/getting-started HTTP/1.1\nHost: docs.company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /news/latest HTTP/1.1\nHost: company.com\nAccept: application/json", "label": "Public"},
+  {"text": "GET /events HTTP/1.1\nHost: company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /partners HTTP/1.1\nHost: company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /changelog HTTP/1.1\nHost: docs.company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /release-notes/v4.1 HTTP/1.1\nHost: docs.company.com\nAccept: text/html", "label": "Public"},
+  {"text": "GET /api/v1/products?category=software HTTP/1.1\nHost: api.company.com\nAccept: application/json", "label": "Public"},
+  {"text": "GET /api/v1/events?limit=10 HTTP/1.1\nHost: api.company.com\nAccept: application/json", "label": "Public"},
+  {"text": "GET /api/v1/blog/posts HTTP/1.1\nHost: api.company.com\nAccept: application/json", "label": "Public"},
+  {"text": "GET /api/v1/pricing-plans HTTP/1.1\nHost: api.company.com\nAccept: application/json", "label": "Public"},
+  {"text": "GET /sitemap.xml HTTP/1.1\nHost: company.com", "label": "Public"},
+  {"text": "GET /robots.txt HTTP/1.1\nHost: company.com", "label": "Public"},
+  {"text": "POST /contact HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nname=John+Smith&email=john%40gmail.com&message=Hello+I+would+like+more+information+about+your+services", "label": "Public"},
+  {"text": "POST /contact HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nname=Alice+Brown&email=alice%40yahoo.com&subject=Partnership+Inquiry&message=We+would+like+to+explore+a+partnership", "label": "Public"},
+  {"text": "POST /contact HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nfirstname=Bob&lastname=Jones&email=bob%40hotmail.com&phone=555-1234&message=Please+send+me+a+product+demo", "label": "Public"},
+  {"text": "POST /contact HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nname=Sara+Lee&company=ACME&email=sara%40acme.com&message=Interested+in+enterprise+pricing", "label": "Public"},
+  {"text": "POST /newsletter/subscribe HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nemail=user%40gmail.com&frequency=weekly&topics=product+updates", "label": "Public"},
+  {"text": "POST /trial/signup HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nname=James+White&email=james%40startup.com&company=StartupCo&plan=free_trial", "label": "Public"},
+  {"text": "POST /demo/request HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nname=Laura+Chen&email=laura%40enterprise.com&company=BigCorp&team_size=50", "label": "Public"},
+  {"text": "POST /feedback HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nrating=5&comment=Great+product+very+easy+to+use&recommend=yes&email=user%40gmail.com", "label": "Public"},
+  {"text": "POST /support/ticket HTTP/1.1\nHost: support.company.com\nContent-Type: application/x-www-form-urlencoded\n\nsubject=Question+about+pricing&message=What+is+the+cost+for+10+users&priority=low", "label": "Public"},
+  {"text": "POST /events/register HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nname=David+Kim&email=david%40gmail.com&event=webinar_march&dietary=none", "label": "Public"},
+  {"text": "POST /search HTTP/1.1\nHost: company.com\nContent-Type: application/x-www-form-urlencoded\n\nquery=enterprise+pricing&category=products&page=1", "label": "Public"},
+  {"text": "name=John+Smith&email=john%40gmail.com&message=Hello+I+would+like+more+information", "label": "Public"},
+  {"text": "firstname=Alice&lastname=Brown&company=ACME&phone=555-1234&interest=enterprise", "label": "Public"},
+  {"text": "email=user%40example.com&subject=Product+Demo+Request&message=Please+schedule+a+demo+for+us", "label": "Public"},
+  {"text": "search=cloud+security+solutions&category=products&sort=relevance&page=1", "label": "Public"},
+  {"text": "query=how+to+get+started&section=docs&language=en", "label": "Public"},
+  {"text": "feedback=Great+product+love+the+new+dashboard&rating=5&recommend=yes", "label": "Public"},
+  {"text": "newsletter=true&email=visitor%40gmail.com&topics=product+news%2Cblog", "label": "Public"},
+  {"text": "event=webinar_april&name=Tom+Baker&email=tom%40company.com&seats=1", "label": "Public"},
+  {"text": "trial=free&plan=starter&name=Kevin+Brown&email=kevin%40startup.io&company=StartupX", "label": "Public"},
+  {"text": "support_type=general&subject=Billing+question&email=customer%40gmail.com&order_id=ORD-5512", "label": "Public"},
+  {"text": "{\"name\": \"John Smith\", \"email\": \"john@gmail.com\", \"message\": \"I would like more information about your enterprise plan\", \"source\": \"contact_form\"}", "label": "Public"},
+  {"text": "{\"type\": \"contact\", \"name\": \"Alice Brown\", \"company\": \"ACME Corp\", \"email\": \"alice@acme.com\", \"subject\": \"Partnership Inquiry\"}", "label": "Public"},
+  {"text": "{\"inquiry\": \"pricing\", \"plan\": \"enterprise\", \"users\": 50, \"email\": \"buyer@company.com\", \"name\": \"Bob Jones\"}", "label": "Public"},
+  {"text": "{\"form\": \"demo_request\", \"company\": \"TechCorp\", \"contact\": \"Sarah Lee\", \"email\": \"sarah@techcorp.com\", \"team_size\": 25}", "label": "Public"},
+  {"text": "{\"action\": \"newsletter_subscribe\", \"email\": \"reader@gmail.com\", \"topics\": [\"product\", \"blog\"], \"frequency\": \"weekly\"}", "label": "Public"},
+  {"text": "{\"event\": \"webinar_signup\", \"name\": \"David Kim\", \"email\": \"david@gmail.com\", \"session\": \"march_15_cloud_security\"}", "label": "Public"},
+  {"text": "{\"feedback\": {\"rating\": 5, \"comment\": \"Excellent product and great support team\", \"recommend\": true, \"page\": \"dashboard\"}}", "label": "Public"},
+  {"text": "{\"support_ticket\": {\"subject\": \"How to reset password\", \"priority\": \"low\", \"category\": \"account\", \"email\": \"user@gmail.com\"}}", "label": "Public"},
+  {"text": "{\"search\": {\"query\": \"enterprise pricing\", \"filters\": {\"category\": \"software\", \"deployment\": \"cloud\"}, \"page\": 1}}", "label": "Public"},
+  {"text": "{\"status\": \"received\", \"message\": \"Thank you for your inquiry. Our team will follow up shortly.\", \"ticket\": \"TKT-9021\"}", "label": "Public"},
+  {"text": "{\"response\": \"success\", \"message\": \"Your contact form has been submitted. We will be in touch within 24 hours.\"}", "label": "Public"},
+  {"text": "{\"type\": \"product_inquiry\", \"product\": \"Enterprise Suite\", \"question\": \"Does it support SSO?\", \"email\": \"admin@company.com\"}", "label": "Public"},
+  {"text": "{\"products\": [{\"id\": 1, \"name\": \"Starter Plan\", \"price\": 29}, {\"id\": 2, \"name\": \"Pro Plan\", \"price\": 99}]}", "label": "Public"},
+  {"text": "{\"status\": \"ok\", \"announcements\": [{\"title\": \"New feature: dark mode\", \"date\": \"2024-03-01\", \"public\": true}]}", "label": "Public"},
+  {"text": "{\"blog_post\": {\"title\": \"Top 5 cloud security tips\", \"author\": \"Jane Doe\", \"published\": true, \"tags\": [\"security\", \"cloud\"]}}", "label": "Public"},
+  {"text": "{\"event\": \"product_launch\", \"product\": \"DLP Suite v3\", \"date\": \"2024-04-01\", \"audience\": \"public\", \"registration\": \"open\"}", "label": "Public"},
+  {"text": "{\"page_view\": \"/pricing\", \"user\": \"anonymous\", \"session\": \"guest_abc123\", \"referrer\": \"google.com\"}", "label": "Public"},
+  {"text": "{\"chat\": {\"visitor\": \"guest\", \"message\": \"Hi I have a question about your plans\", \"page\": \"/pricing\"}}", "label": "Public"},
+  {"text": "<form action=\"/contact\" method=\"POST\"><input name=\"name\" value=\"John Smith\"><input name=\"email\" value=\"john@gmail.com\"><textarea name=\"message\">Hello I would like more information</textarea></form>", "label": "Public"},
+  {"text": "<form method=\"POST\" action=\"/subscribe\"><input type=\"email\" name=\"email\" placeholder=\"your@email.com\"><button type=\"submit\">Subscribe</button></form>", "label": "Public"},
+  {"text": "<html><body><h1>Contact Us</h1><p>Fill out the form below and we will get back to you within 24 hours.</p></body></html>", "label": "Public"},
+  {"text": "<html><body><h2>Thank you for your inquiry!</h2><p>A member of our team will contact you shortly.</p></body></html>", "label": "Public"},
+  {"text": "<div class=\"product-card\"><h3>Enterprise Plan</h3><p>Starting at $99/month</p><a href=\"/contact\">Get a quote</a></div>", "label": "Public"},
+  {"text": "<div class=\"faq\"><h3>How do I get started?</h3><p>Sign up for a free trial at trial.company.com. No credit card required.</p></div>", "label": "Public"},
+  {"text": "POST /api/v1/contact HTTP/1.1\nHost: api.company.com\nContent-Type: application/json\n\n{\"name\": \"John\", \"email\": \"john@gmail.com\", \"subject\": \"Pricing question\"}", "label": "Public"},
+  {"text": "POST /api/v1/newsletter HTTP/1.1\nHost: api.company.com\nContent-Type: application/json\n\n{\"email\": \"user@gmail.com\", \"lists\": [\"product_updates\", \"blog\"]}", "label": "Public"},
+  {"text": "GET /api/v1/blog/post/cloud-security-2024 HTTP/1.1\nHost: api.company.com\nAccept: application/json", "label": "Public"},
+  {"text": "GET /api/v1/pricing HTTP/1.1\nHost: api.company.com\nAccept: application/json", "label": "Public"},
+  {"text": "POST /api/v1/feedback HTTP/1.1\nHost: api.company.com\nContent-Type: application/json\n\n{\"rating\": 5, \"comment\": \"Excellent product\", \"feature\": \"dashboard\", \"recommend\": true}", "label": "Public"},
+  {"text": "Starter plan: $29/month for up to 5 users. Includes core features and email support.", "label": "Public"},
+  {"text": "Pro plan: $99/month for up to 25 users. Includes all features, priority support, and API access.", "label": "Public"},
+  {"text": "Enterprise plan: custom pricing for large teams. Includes SSO, dedicated support, and SLA guarantees.", "label": "Public"},
+  {"text": "All plans include a 14-day free trial. No credit card required. Cancel anytime.", "label": "Public"},
+  {"text": "Read our latest blog post: Top 5 ways to protect your organization from data breaches in 2024.", "label": "Public"},
+  {"text": "Webinar: Introduction to Data Loss Prevention. Join us live on April 15th. Register at company.com/events.", "label": "Public"},
+  {"text": "Case study: How a Fortune 500 company reduced data breach risk by 60 percent using our platform.", "label": "Public"},
+  {"text": "Join 5000 companies using our platform to protect sensitive data. Start your free trial today.", "label": "Public"},
+  {"text": "utm_source=google&utm_medium=cpc&utm_campaign=enterprise_dlp&utm_content=pricing_page", "label": "Public"},
+  {"text": "page=/contact&action=form_submit&form_id=contact_us&visitor=anonymous", "label": "Public"},
+  {"text": "event=button_click&element=get_started_cta&page=/pricing&session=guest&user_type=anonymous", "label": "Public"},
+  {"text": "search_query=data+loss+prevention+software&results=12&page=1&user=anonymous", "label": "Public"},
+  {"text": "Your free trial has been activated. Login at app.company.com. Your account is valid for 14 days.", "label": "Public"},
+  {"text": "Welcome to our newsletter. You will receive product updates and blog posts every week.", "label": "Public"},
+  {"text": "Your event registration is confirmed. See you at the webinar on March 15th at 2pm EST.", "label": "Public"},
+  {"text": "Your support ticket has been opened. Ticket ID: TKT-8821. Our team will respond within one business day.", "label": "Public"},
+  {"text": "Password reset link sent to your email. The link expires in 24 hours.", "label": "Public"},
+  {"text": "Scheduled maintenance: the platform will be unavailable Saturday 2am to 4am UTC.", "label": "Public"},
+  {"text": "Status update: all systems operational. The earlier login issue has been resolved.", "label": "Public"},
+  {"text": "Incident resolved: the API outage from 10am to 11am has been fixed. See status page.", "label": "Public"},
+
+  {"text": "POST /intranet/upload HTTP/1.1\nHost: internal.company.com\nContent-Type: multipart/form-data\n\nfilename=q3_team_update.docx\nInternal team update for Q3. Management review only. Do not share externally.", "label": "Internal"},
+  {"text": "POST /intranet/upload HTTP/1.1\nHost: internal.company.com\n\nfilename=org_chart_updated.pptx\nUpdated organizational chart after the restructuring. Internal use only.", "label": "Internal"},
+  {"text": "POST /intranet/upload HTTP/1.1\nHost: internal.company.com\n\nfilename=sprint_backlog_q4.xlsx\nSprint backlog for Q4. Internal team only. Not for client distribution.", "label": "Internal"},
+  {"text": "POST /sharepoint/upload HTTP/1.1\nHost: sharepoint.company.com\n\nfilename=budget_vs_actuals_q3.xlsx\nBudget vs actuals for Q3. Internal finance review only.", "label": "Internal"},
+  {"text": "POST /sharepoint/upload HTTP/1.1\nHost: sharepoint.company.com\n\nfilename=headcount_plan_2024.xlsx\nHeadcount plan for 2024. Internal HR planning document.", "label": "Internal"},
+  {"text": "POST /sharepoint/upload HTTP/1.1\nHost: sharepoint.company.com\n\nfilename=sales_targets_h2.xlsx\nSales targets for H2. Internal sales planning. Not for clients.", "label": "Internal"},
+  {"text": "POST /confluence/page HTTP/1.1\nHost: confluence.company.com\n\ntitle=Sprint+Retrospective+Notes\nbody=Internal team retrospective. Do not share with clients.", "label": "Internal"},
+  {"text": "POST /confluence/page HTTP/1.1\nHost: confluence.company.com\n\ntitle=IT+Runbook+VPN+Setup\nbody=Internal IT runbook for VPN configuration. Staff use only.", "label": "Internal"},
+  {"text": "POST /jira/issue HTTP/1.1\nHost: jira.company.com\nContent-Type: application/json\n\n{\"summary\": \"Update internal deployment procedure\", \"description\": \"Internal runbook update for ops team\", \"priority\": \"Medium\"}", "label": "Internal"},
+  {"text": "POST /jira/issue HTTP/1.1\nHost: jira.company.com\n\n{\"summary\": \"Fix internal dashboard bug\", \"assignee\": \"dev_team\", \"sprint\": \"Sprint 24\", \"type\": \"Bug\"}", "label": "Internal"},
+  {"text": "{\"type\": \"internal_memo\", \"to\": \"all_staff\", \"subject\": \"New expense policy\", \"body\": \"Internal use only. Effective next month.\", \"distribution\": \"internal\"}", "label": "Internal"},
+  {"text": "{\"meeting\": \"sprint_planning\", \"attendees\": [\"team_leads\"], \"notes\": \"Internal only — not for client distribution\", \"date\": \"2024-Q3\"}", "label": "Internal"},
+  {"text": "{\"report_type\": \"headcount\", \"quarter\": \"Q3\", \"classification\": \"internal\", \"do_not_distribute\": true}", "label": "Internal"},
+  {"text": "{\"document\": \"org_chart\", \"version\": \"v3\", \"access\": \"internal_only\", \"last_updated\": \"2024-03-01\", \"author\": \"hr_team\"}", "label": "Internal"},
+  {"text": "{\"type\": \"team_update\", \"project\": \"Phoenix\", \"status\": \"on_track\", \"audience\": \"internal\", \"share_externally\": false}", "label": "Internal"},
+  {"text": "{\"budget\": {\"q3_actual\": 450000, \"q3_plan\": 480000, \"variance\": -30000, \"classification\": \"internal\", \"approved_by\": \"cfo\"}}", "label": "Internal"},
+  {"text": "{\"ticket\": \"ESC-441\", \"type\": \"internal_escalation\", \"description\": \"Production issue escalated to on-call engineer\", \"team\": \"ops\", \"priority\": \"high\"}", "label": "Internal"},
+  {"text": "action=upload&document=budget_draft_q4&classification=internal&distribute=no&recipients=management_only", "label": "Internal"},
+  {"text": "upload_type=internal&filename=org_restructure_plan.xlsx&access=restricted_internal&notify=team_leads", "label": "Internal"},
+  {"text": "document=sprint_notes&access=team_only&project=phoenix&do_not_share=true&quarter=q3", "label": "Internal"},
+  {"text": "report=headcount_plan&classification=internal&recipient=hr_managers&format=xlsx&period=2024", "label": "Internal"},
+  {"text": "memo=expense_policy_update&distribution=all_staff&internal=true&effective_date=next_month", "label": "Internal"},
+  {"text": "Internal memo: IT will perform system maintenance this weekend. No external access during the window.", "label": "Internal"},
+  {"text": "Dear team, the VPN will be offline Saturday 8am to 12pm for scheduled maintenance. Internal notice only.", "label": "Internal"},
+  {"text": "Internal only: the updated travel expense policy is attached. Submit claims using the new form.", "label": "Internal"},
+  {"text": "Staff reminder: submit timesheets by end of day Friday. Payroll processes Saturday morning.", "label": "Internal"},
+  {"text": "Please review the attached draft of the internal communication plan for Q4. Feedback by Friday.", "label": "Internal"},
+  {"text": "Draft of the internal announcement is attached. Feedback welcome before it goes to all staff.", "label": "Internal"},
+  {"text": "Internal HR update: changes to remote work policy effective next month. Do not distribute externally.", "label": "Internal"},
+  {"text": "Team leads meeting recap. Internal. Please do not share outside the management group.", "label": "Internal"},
+  {"text": "IT notice: VPN certificates are being renewed this weekend. No action required from staff.", "label": "Internal"},
+  {"text": "Internal escalation: the outage has been escalated to the on-call engineer. ETA for resolution: 2 hours.", "label": "Internal"},
+  {"text": "Internal wiki updated: new runbook for on-call rotation procedure added to Confluence.", "label": "Internal"},
+  {"text": "Uploading Q2 sales plan to SharePoint. For internal team use only. Not for clients.", "label": "Internal"},
+  {"text": "All project leads must log hours in Jira before the Friday payroll cutoff. Internal reminder.", "label": "Internal"},
+  {"text": "The attached onboarding checklist has been updated. HR will distribute to new hires only.", "label": "Internal"},
+  {"text": "Internal draft communication attached. Review before we send to all staff next week.", "label": "Internal"},
+  {"text": "Attached is the revised IT acceptable use policy. All staff must acknowledge receipt.", "label": "Internal"},
+  {"text": "Internal: the data retention policy has been approved by legal. Please review before end of week.", "label": "Internal"},
+  {"text": "POST /slack/message HTTP/1.1\nHost: slack.company.com\n\nchannel=engineering&text=Heads up: staging DB will be down 6pm-8pm for migration. Internal only.", "label": "Internal"},
+  {"text": "POST /teams/message HTTP/1.1\nHost: teams.company.com\n\nchannel=hr-general&message=Reminder: annual performance reviews due by end of month. Internal HR process.", "label": "Internal"},
+  {"text": "POST /zoom/schedule HTTP/1.1\nHost: zoom.company.com\n\nmeeting=Q3_retrospective&attendees=team_leads&internal=true&password=internal123", "label": "Internal"},
+  {"text": "PUT /intranet/policy/travel HTTP/1.1\nHost: internal.company.com\n\nbody=Updated travel reimbursement policy. Effective next quarter. Internal staff only.", "label": "Internal"},
+  {"text": "GET /intranet/hr/policies HTTP/1.1\nHost: internal.company.com\nAuthorization: Bearer internal_token\nAccept: application/json", "label": "Internal"},
+  {"text": "GET /intranet/org-chart HTTP/1.1\nHost: internal.company.com\nAuthorization: Bearer staff_token\nAccept: application/json", "label": "Internal"},
+
+  {"text": "POST /upload HTTP/1.1\nHost: wetransfer.com\nContent-Type: multipart/form-data\n\nfilename=Q4_merger_strategy_FINAL.docx\nThe acquisition of TechCorp must remain confidential until board approval.", "label": "Confidential"},
+  {"text": "POST /upload HTTP/1.1\nHost: wetransfer.com\n\nfilename=acquisition_due_diligence_report.pdf\nConfidential M&A due diligence findings. Not for distribution outside deal team.", "label": "Confidential"},
+  {"text": "POST /drive/upload HTTP/1.1\nHost: drive.google.com\n\nfilename=board_presentation_Q3_confidential.pptx\nRevenue projections and M&A targets. Board eyes only.", "label": "Confidential"},
+  {"text": "POST /drive/upload HTTP/1.1\nHost: drive.google.com\n\nfilename=layoff_plan_q1_confidential.docx\n15 percent workforce reduction plan. HR and executives only. Embargoed.", "label": "Confidential"},
+  {"text": "POST /api/files HTTP/1.1\nHost: dropbox.com\n\nfilename=earnings_forecast_q4_embargoed.xlsx\nRevenue miss of 18 percent. Do not share before earnings call on Friday.", "label": "Confidential"},
+  {"text": "POST /upload HTTP/1.1\nHost: box.com\n\nfilename=nda_globaltech_draft.pdf\nNDA covering all discussions regarding Project Falcon. Strictly confidential.", "label": "Confidential"},
+  {"text": "POST /api/documents HTTP/1.1\nHost: internal.company.com\nContent-Type: application/json\n\n{\"type\": \"board_resolution\", \"classification\": \"confidential\", \"content\": \"Stock buyback approved. Pre-announcement. Do not disclose.\"}", "label": "Confidential"},
+  {"text": "PUT /api/compensation/bands HTTP/1.1\nHost: internal.company.com\n\n{\"role\": \"Senior Engineer\", \"band_min\": 120000, \"band_max\": 180000, \"visibility\": \"hr_exec_only\"}", "label": "Confidential"},
+  {"text": "{\"classification\": \"confidential\", \"subject\": \"merger_target\", \"company\": \"TechCorp\", \"valuation\": \"2.1B\", \"board_approved\": false, \"announcement_date\": \"TBD\"}", "label": "Confidential"},
+  {"text": "{\"report\": \"financial_forecast\", \"quarter\": \"Q4\", \"revenue_delta\": -0.18, \"distribution\": \"executive_only\", \"embargoed\": true}", "label": "Confidential"},
+  {"text": "{\"document_type\": \"NDA\", \"parties\": [\"ACME Corp\", \"GlobalTech\"], \"status\": \"pending_signature\", \"confidentiality_level\": \"strictly_confidential\"}", "label": "Confidential"},
+  {"text": "{\"deal\": {\"target\": \"NileTech\", \"valuation\": \"800M EGP\", \"stage\": \"due_diligence\", \"board_aware\": false, \"classification\": \"strictly_confidential\"}}", "label": "Confidential"},
+  {"text": "{\"type\": \"personnel_action\", \"employee\": \"regional_director\", \"action\": \"termination\", \"effective\": \"2024-12-31\", \"confidential\": true, \"approved_by\": \"ceo\"}", "label": "Confidential"},
+  {"text": "{\"litigation\": {\"case\": \"Smith_v_Company\", \"settlement\": \"4.5M\", \"status\": \"agreed_in_principle\", \"privilege\": \"attorney_client\", \"do_not_disclose\": true}}", "label": "Confidential"},
+  {"text": "{\"earnings\": {\"eps\": -0.34, \"vs_guidance\": \"miss\", \"embargoed_until\": \"Friday_market_close\", \"distribution\": \"cfr_team_only\"}}", "label": "Confidential"},
+  {"text": "{\"restructure\": {\"divisions_affected\": [\"product\", \"engineering\"], \"headcount_reduction\": 40, \"classification\": \"confidential\", \"board_approval\": \"pending\"}}", "label": "Confidential"},
+  {"text": "document=merger_strategy&classification=confidential&recipients=board_only&embargoed=true&announcement=pending", "label": "Confidential"},
+  {"text": "file=layoff_plan_q1&access=hr_exec_only&classification=strictly_confidential&distribute=false", "label": "Confidential"},
+  {"text": "report=earnings_forecast&quarter=q4&embargo=true&distribution=cfo_team&revenue_miss=18pct", "label": "Confidential"},
+  {"text": "type=nda&parties=acme_globaltech&status=pending_signature&confidentiality=strictly_confidential", "label": "Confidential"},
+  {"text": "The proposed org restructuring affects the product and engineering divisions. For leadership only.", "label": "Confidential"},
+  {"text": "Organizational restructuring planned across product and engineering. Executive review only.", "label": "Confidential"},
+  {"text": "The restructuring proposal affects three divisions. Not for general distribution.", "label": "Confidential"},
+  {"text": "Division restructure planned for Q1. Impacts engineering and product teams. Embargoed.", "label": "Confidential"},
+  {"text": "Proposed changes to reporting lines across product and engineering divisions. Board review pending.", "label": "Confidential"},
+  {"text": "Leadership restructure affects the product division. Announcement embargoed until Monday.", "label": "Confidential"},
+  {"text": "The reorganization plan covers the engineering and product divisions. Executive eyes only.", "label": "Confidential"},
+  {"text": "Restructuring memo: changes to engineering org chart. Not for general circulation.", "label": "Confidential"},
+  {"text": "Net loss EGP 2.3M. Merger planned. Board unaware. Strictly confidential.", "label": "Confidential"},
+  {"text": "Revenue declined 18 percent. Board not yet informed. Do not share.", "label": "Confidential"},
+  {"text": "Quarterly loss reported. Merger announcement pending board approval.", "label": "Confidential"},
+  {"text": "Financial projections show deficit this quarter. Executive eyes only.", "label": "Confidential"},
+  {"text": "EPS below guidance. Announcement embargoed until Friday market close.", "label": "Confidential"},
+  {"text": "Operating loss this quarter. Embargoed until official announcement.", "label": "Confidential"},
+  {"text": "Acquisition target identified. Due diligence begins Monday. Confidential.", "label": "Confidential"},
+  {"text": "Term sheet agreed. Not for distribution outside deal team.", "label": "Confidential"},
+  {"text": "M&A discussions ongoing. Board approval pending. Confidential.", "label": "Confidential"},
+  {"text": "Merger with AcmeCorp. Board unaware. Strictly confidential.", "label": "Confidential"},
+  {"text": "POST /api/v1/documents HTTP/1.1\nHost: internal.company.com\nAuthorization: Bearer exec_token\n\n{\"type\": \"board_memo\", \"subject\": \"Q4 earnings miss\", \"classification\": \"confidential\", \"embargo\": true}", "label": "Confidential"},
+  {"text": "POST /api/v1/hr/personnel HTTP/1.1\nHost: internal.company.com\n\n{\"action\": \"termination\", \"employee_id\": \"EMP-441\", \"effective_date\": \"2024-12-31\", \"confidential\": true}", "label": "Confidential"},
+  {"text": "POST /legal/documents HTTP/1.1\nHost: internal.company.com\n\n{\"type\": \"litigation_summary\", \"privilege\": \"attorney_client\", \"settlement_amount\": 4500000, \"status\": \"not_for_disclosure\"}", "label": "Confidential"},
+  {"text": "PUT /api/v1/strategy/roadmap HTTP/1.1\nHost: internal.company.com\nAuthorization: Bearer exec_token\n\n{\"roadmap\": \"2025_expansion\", \"classification\": \"strictly_confidential\", \"audience\": \"executive_committee\"}", "label": "Confidential"},
+
+  {"text": "POST /upload HTTP/1.1\nHost: dropbox.com\nContent-Type: multipart/form-data\n\nfilename=customer_db_export.csv\ncustomer_id,national_id,credit_card,cvv,billing_address — full export 80000 records", "label": "Restricted"},
+  {"text": "POST /upload HTTP/1.1\nHost: personal.onedrive.com\n\nfilename=HR_salary_database_full.xlsx\nAll employee salaries, bank accounts, national IDs — full payroll data dump", "label": "Restricted"},
+  {"text": "POST /upload HTTP/1.1\nHost: mega.nz\n\nfilename=patient_records_all.sql\nPatient SSN, DOB, diagnosis, medications — 3400 records from hospital system", "label": "Restricted"},
+  {"text": "POST /upload HTTP/1.1\nHost: wetransfer.com\n\nfilename=source_code_proprietary.zip\nProduction source code including API keys and database credentials", "label": "Restricted"},
+  {"text": "POST /upload HTTP/1.1\nHost: anonfiles.com\n\nfilename=credentials_dump.txt\nDB_HOST=prod-db.internal\nDB_USER=root\nDB_PASS=Admin@123\nAPI_KEY=sk-prod-9f2k", "label": "Restricted"},
+  {"text": "POST /s3/upload HTTP/1.1\nHost: s3.amazonaws.com\nBucket: personal-backup\n\nKey=patient_records_dump.sql\nContent: Patient SSN, DOB, diagnosis, medications — 3400 records", "label": "Restricted"},
+  {"text": "PUT /company-data/exports/customer_full_dump.csv HTTP/1.1\nHost: s3.amazonaws.com\n\ncustomer_id,email,ssn,credit_card,cvv,billing_address — 80000 records", "label": "Restricted"},
+  {"text": "POST /graphql HTTP/1.1\nHost: internal-app.company.com\nContent-Type: application/json\n\n{\"query\": \"{ users { id email ssn credit_card national_id salary bank_account } }\"}", "label": "Restricted"},
+  {"text": "POST /graphql HTTP/1.1\nHost: api.company.com\n\n{\"query\": \"mutation { exportCustomerData(format: CSV, includeFields: [ssn, card_number, dob, national_id]) { downloadUrl } }\"}", "label": "Restricted"},
+  {"text": "GET /api/v1/users?fields=ssn,credit_card,dob,national_id&export=true&format=csv HTTP/1.1\nAuthorization: Bearer compromised_token", "label": "Restricted"},
+  {"text": "GET /api/admin/dump?table=customers&include_pii=true&include_payment=true HTTP/1.1\nX-Admin-Key=leaked_admin_key_12345", "label": "Restricted"},
+  {"text": "GET /api/v1/employees?fields=name,salary,bank_account,national_id&export=csv HTTP/1.1\nAuthorization: Bearer admin_token", "label": "Restricted"},
+  {"text": "POST /api/export HTTP/1.1\nHost: internal.company.com\n\n{\"table\": \"patients\", \"fields\": [\"ssn\", \"dob\", \"diagnosis\", \"medications\", \"national_id\"], \"format\": \"csv\"}", "label": "Restricted"},
+  {"text": "{\"ssn\": \"123-45-6789\", \"dob\": \"1985-04-12\", \"name\": \"John Doe\", \"account\": \"9876543210\", \"routing\": \"021000021\"}", "label": "Restricted"},
+  {"text": "{\"card_number\": \"4111111111111111\", \"cvv\": \"123\", \"expiry\": \"12/26\", \"cardholder\": \"Ahmed Hassan\", \"billing_zip\": \"11371\"}", "label": "Restricted"},
+  {"text": "{\"patient_id\": \"PAT-001\", \"name\": \"Sarah Johnson\", \"dob\": \"1990-03-15\", \"diagnosis\": \"HIV+\", \"medication\": \"ART\", \"national_id\": \"29001011234567\"}", "label": "Restricted"},
+  {"text": "{\"db_host\": \"prod-db.internal\", \"db_user\": \"root\", \"db_password\": \"Adm1n@Pr0d\", \"db_name\": \"customers_prod\", \"port\": 5432}", "label": "Restricted"},
+  {"text": "{\"aws_access_key\": \"AKIAI44QH8DHBEXAMPLE\", \"aws_secret\": \"je7MtGbClwBF2Zp9Utk\", \"region\": \"us-east-1\", \"account_id\": \"123456789012\"}", "label": "Restricted"},
+  {"text": "{\"employee_id\": \"EMP-12345\", \"name\": \"Mohamed Ali\", \"national_id\": \"29001011234567\", \"salary\": 25000, \"bank_account\": \"1234567890123456\", \"iban\": \"EG380019000500000000263180002\"}", "label": "Restricted"},
+  {"text": "{\"payroll\": [{\"id\": \"EMP-001\", \"name\": \"Ahmed Hassan\", \"salary\": 25000, \"bank_routing\": \"021000021\", \"account\": \"1234567890\"}]}", "label": "Restricted"},
+  {"text": "{\"users\": [{\"id\": 1, \"email\": \"user@co.com\", \"password_hash\": \"$2b$12$abc\", \"ssn\": \"123-45-6789\", \"credit_card\": \"4111111111111111\"}]}", "label": "Restricted"},
+  {"text": "{\"export\": \"patient_records\", \"count\": 3400, \"fields\": [\"ssn\", \"dob\", \"diagnosis\", \"medications\", \"national_id\"], \"format\": \"csv\"}", "label": "Restricted"},
+  {"text": "{\"secret\": {\"STRIPE_KEY\": \"sk_live_51Hx9Y2abc\", \"DB_PASSWORD\": \"Pr0duct10n!\", \"SENDGRID_KEY\": \"SG.abc123xyz\", \"JWT_SECRET\": \"supersecret\"}}", "label": "Restricted"},
+  {"text": "cardNumber=4111111111111111&cvv=123&expiryMonth=12&expiryYear=26&cardholderName=John+Doe&billingZip=10001", "label": "Restricted"},
+  {"text": "ssn=123-45-6789&dateOfBirth=1985-04-12&firstName=John&lastName=Doe&address=123+Main+St&insuranceId=BC123456", "label": "Restricted"},
+  {"text": "nationalId=29001011234567&fullName=Ahmed+Hassan&dateOfBirth=1990-05-20&bankAccount=1234567890123456", "label": "Restricted"},
+  {"text": "username=admin&password=Sup3rS3cr3t%21&db=production&host=db.internal.com&port=5432", "label": "Restricted"},
+  {"text": "db_host=prod-db.internal&db_user=root&db_pass=Admin%40123&db_name=customers_prod", "label": "Restricted"},
+  {"text": "api_key=sk-prod-9f2k&aws_key=AKIAI44QH8DHBEXAMPLE&aws_secret=wJalrXUtnFEMI&stripe=sk_live_abc", "label": "Restricted"},
+  {"text": "patient_ssn=987-65-4321&dob=1990-07-14&diagnosis=hiv_positive&medication=ART&doctor_id=DR-441", "label": "Restricted"},
+  {"text": "export_table=customers&include_card=true&include_ssn=true&include_national_id=true&format=csv&rows=80000", "label": "Restricted"},
+  {"text": "SELECT customer_id, card_number, cvv, expiry FROM payments WHERE status='active'", "label": "Restricted"},
+  {"text": "SELECT ssn, dob, salary, bank_account FROM employees WHERE department='engineering'", "label": "Restricted"},
+  {"text": "SELECT patient_id, national_id, diagnosis, medications FROM patients WHERE admitted='2024-01-01'", "label": "Restricted"},
+  {"text": "SELECT * FROM users WHERE role='admin'; -- full user table dump including passwords and PII", "label": "Restricted"},
+  {"text": "INSERT INTO audit_log SELECT id, email, password_hash, credit_card, ssn FROM users;", "label": "Restricted"},
+  {"text": "DB_HOST=prod-db.internal\nDB_USER=root\nDB_PASS=Xk9!mP2\nDB_NAME=customers_prod\nDB_PORT=5432", "label": "Restricted"},
+  {"text": "STRIPE_KEY=sk_live_51Hx9Y2\nSENDGRID_KEY=SG.abc123xyz\nDB_PASSWORD=Pr0duct10n!\nJWT_SECRET=abc123", "label": "Restricted"},
+  {"text": "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE\nAWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI\nAWS_REGION=us-east-1", "label": "Restricted"},
+  {"text": "API_KEY=sk-prod-9f2k\nSECRET_KEY=xK9m2pL8\nPRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAK", "label": "Restricted"},
+  {"text": "Cookie: session_id=abc123; auth_token=eyJhbGciOiJIUzI1NiJ9; db_password=Admin123; api_key=sk-prod-9f2k", "label": "Restricted"},
+  {"text": "Set-Cookie: admin_token=SuperSecretToken123; HttpOnly=false; Secure=false", "label": "Restricted"},
+  {"text": "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhZG1pbiI6dHJ1ZX0 — admin JWT exposed in URL", "label": "Restricted"},
+  {"text": "WS /stream\n{\"event\": \"user_data\", \"payload\": {\"ssn\": \"987-65-4321\", \"card\": \"4111111111111111\", \"cvv\": \"321\"}}", "label": "Restricted"},
+  {"text": "WS /chat\n{\"type\": \"message\", \"content\": \"The DB password is Admin@123 and the API key is sk-prod-9f2k\"}", "label": "Restricted"},
+  {"text": "<form action=\"/payment\"><input name=\"card_number\" value=\"4111111111111111\"><input name=\"cvv\" value=\"123\"><input name=\"ssn\" value=\"123-45-6789\"></form>", "label": "Restricted"},
+  {"text": "<input type=\"hidden\" name=\"national_id\" value=\"29001011234567\"><input name=\"dob\" value=\"1990-05-20\"><input name=\"password\" value=\"MySecret123\">", "label": "Restricted"},
+  {"text": "Content-Disposition: form-data; name=\"file\"; filename=\"patient_records.xlsx\"\nSSN, DOB, diagnosis, credit_card for 3400 patients", "label": "Restricted"},
+  {"text": "Content-Disposition: form-data; name=\"file\"; filename=\"credentials.env\"\nDB_PASSWORD=Admin@123\nAWS_SECRET=wJalrXUtnFEMI\nAPI_KEY=sk-prod-9f2k", "label": "Restricted"},
+  {"text": "Content-Disposition: form-data; name=\"file\"; filename=\"payroll_Q4.csv\"\nemployee_id,name,national_id,bank_account,routing,net_salary\n12345,Ahmed,29001011234567,123456789,021000021,25000", "label": "Restricted"},
+  {"text": "gsutil cp employee_biometrics.zip gs://personal-bucket/ — fingerprint hashes and face embeddings for 2000 staff", "label": "Restricted"},
+  {"text": "POST /upload/blob HTTP/1.1\nHost: myaccount.blob.core.windows.net\nBlob: HR_payroll_all_employees.xlsx\nContent: salary, bank account, national ID data", "label": "Restricted"},
+  {"text": "Patient John Doe, DOB 1985-04-12, HIV positive diagnosis, ART medication initiated. NID: 29001011234567", "label": "Restricted"},
+  {"text": "Medical record: Sarah Johnson, SSN 987-65-4321, Stage 2 breast cancer, chemotherapy started.", "label": "Restricted"},
+  {"text": "Employee payroll file: bank account numbers, routing numbers, net salaries for 800 staff. National IDs included.", "label": "Restricted"},
+  {"text": "Database backup containing plaintext passwords, credit card numbers and SSNs for all user accounts.", "label": "Restricted"},
+  {"text": "HIPAA breach: 3400 patient records including diagnosis codes, medications, and national IDs exposed.", "label": "Restricted"},
+  {"text": "Biometric data export: fingerprint hashes and face embeddings for 1200 employees. Highly sensitive.", "label": "Restricted"},
+  {"text": "Wire transfer: routing 021000021, account 8675309, amount 250000 dollars. IBAN EG380019000500000000263180002", "label": "Restricted"},
+  {"text": "SWIFT transfer: IBAN DE89370400440532013000. Amount: EUR 450000. Beneficiary: Mohamed Hassan.", "label": "Restricted"},
+  {"text": "Credit card dump: PAN 4111111111111111, CVV 123, expiry 12/26, billing address 123 Main St, zip 10001.", "label": "Restricted"},
+  {"text": "Mastercard: 5500 0055 5555 4444, CVV 789, expiry 08/27. Cardholder: Ahmed Hassan. Bank: CIB.", "label": "Restricted"},
+  {"text": "BEGIN RSA PRIVATE KEY\nMIIEpAIBAAKCAQEA3Tl9Vz2rHqJ0DxYz\n-----END RSA PRIVATE KEY-----", "label": "Restricted"},
+  {"text": "kubectl get secret prod-credentials -o yaml — contains base64 encoded DB passwords and API keys", "label": "Restricted"},
+  {"text": "https://pastebin.com/raw/abc123\nDB_HOST=prod.internal.company.com\nDB_USER=admin\nDB_PASS=Pr0duct10n!\nSTRIPE_KEY=sk_live_51Hx9Y2", "label": "Restricted"},
+  {"text": "POST /api/data HTTP/1.1\nContent-Type: application/json\n\n{\"data\": \"eyJzc24iOiAiMTIzLTQ1LTY3ODkiLCAiY2FyZCI6ICI0MTExMTExMTExMTExMTExIn0=\", \"encoding\": \"base64\"}", "label": "Restricted"},
+  {"text": "Prescription: oxycodone 10mg, DEA number AB1234563, patient DOB 1978-03-15. Dr. Smith MD NPI 1234567890.", "label": "Restricted"},
+  {"text": "ICD-10: F32.1 Major depressive disorder. Prescribed sertraline 50mg. Patient SSN 456-78-9012.", "label": "Restricted"},
+  {"text": "Full name: Robert Chen, SSN 456-78-9012, DOB 1965-11-30, insurance BC456789, diagnosis: Type 2 Diabetes.", "label": "Restricted"},
+  {"text": "Export of user table: id, email, password_hash, credit_card, ssn, date_of_birth, national_id. 80000 rows.", "label": "Restricted"},
+  {"text": "Payroll export: employee_id, full_name, bank_routing, account_number, net_salary, national_id. All staff.", "label": "Restricted"},
+  {"text": "Table dump: users — columns: user_id, email, password_hash, ssn, date_of_birth, credit_card. Full export.", "label": "Restricted"},
+  {"text": "SELECT * FROM customers LIMIT 80000 — full PII export including national_id, card_number, cvv, address.", "label": "Restricted"},
+  {"text": "Environment config: STRIPE_KEY=sk_live_abc SENDGRID_KEY=SG.xyz DB_URL=postgres://admin:pass@db.internal", "label": "Restricted"}
+
+]

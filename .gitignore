@@ -1,0 +1,7 @@
+models/
+__pycache__/
+*.pyc
+.env
+kaggle/
+training_data/
+*.csv
