@@ -46,6 +46,7 @@ WHAT THIS FILE DOES:
 """
 
 import re
+import os
 import sys
 import time
 import torch
@@ -54,8 +55,8 @@ from pathlib import Path
 
 # ── MODEL PATHS ───────────────────────────────────────────────────────────
 _BASE = Path(__file__).parent
-DISTILBERT_PATH = str(_BASE / "models/finetuned_distilbert")
-ARABERT_PATH    = str(_BASE / "models/finetuned_arabert")
+DISTILBERT_PATH = os.getenv("DISTILBERT_MODEL_PATH", str(_BASE / "models/finetuned_distilbert"))
+ARABERT_PATH    = os.getenv("ARABERT_MODEL_PATH", str(_BASE / "models/finetuned_arabert"))
 
 # ── LABELS ────────────────────────────────────────────────────────────────
 LABELS   = ["Public", "Internal", "Confidential", "Restricted"]
@@ -389,7 +390,7 @@ class LazyLoader:
 class AIOrchestrator:
 
     def __init__(self, llm_model: str = None):
-        print("[Orchestrator] Initializing v6 (LLM-integrated, web + email aware)...")
+        print("[Orchestrator] Initializing v6 (local fallback preprocessing, web + email aware)...")
         self._llm = LazyLoader(self._load_llm_preprocessor(llm_model))
         self._distilbert = LazyLoader(
             lambda: DirectModelLoader(DISTILBERT_PATH, "DistilBERT")
@@ -403,6 +404,10 @@ class AIOrchestrator:
     def _load_llm_preprocessor(self, model: str = None):
         def _factory():
             sys.path.insert(0, str(Path(__file__).parent.parent))
+            if os.getenv("AI_ENABLE_LLM", "0").strip().lower() not in ("1", "true", "yes"):
+                from ai.llm.llm_preprocessor import LocalFallbackPreprocessor
+                print("[Orchestrator] LLM disabled; using LocalFallbackPreprocessor only.")
+                return LocalFallbackPreprocessor()
             try:
                 from ai.llm.llm_preprocessor import LLMPreprocessor
                 kwargs = {"model": model} if model else {}

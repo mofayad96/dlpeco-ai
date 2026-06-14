@@ -1,0 +1,12 @@
+.git
+__pycache__/
+*.pyc
+.pytest_cache/
+training_data/
+kaggle/
+holdout_*.json
+synthetic_data.json
+test.py
+test_api.py
+semantic_classifier.py
+models/finetuned_distilbert/checkpoint-*/

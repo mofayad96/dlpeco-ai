@@ -1,86 +1,188 @@
 import os
 import time
-from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Header, HTTPException, Request
-from pydantic import BaseModel
 from contextlib import asynccontextmanager
-import uvicorn
 from pathlib import Path
-import sys
+from typing import Any, Dict, List, Optional
 
-# Ensure parent directory is in sys.path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import uvicorn
+from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel, Field
 
-from ai.ai_orchestrator import AIOrchestrator
+from ai.ai_orchestrator import AIOrchestrator, LABELS
 
-# Security Token (should be set via environment variable)
 AI_SERVICE_TOKEN = os.getenv("AI_SERVICE_TOKEN")
 if not AI_SERVICE_TOKEN:
-    print("WARNING: AI_SERVICE_TOKEN not set. Using default insecure token.")
-    AI_SERVICE_TOKEN = "default-secret-token"
+    raise RuntimeError("AI_SERVICE_TOKEN must be set; use the same value in every client X-API-Key header")
 
-# Orchestrator instance
-orchestrator = None
+DISTILBERT_MODEL_PATH = Path(os.getenv("DISTILBERT_MODEL_PATH", "/app/ai/models/finetuned_distilbert"))
+ARABERT_MODEL_PATH = Path(os.getenv("ARABERT_MODEL_PATH", "/app/ai/models/finetuned_arabert"))
+
+orchestrator: AIOrchestrator | None = None
+startup_status: dict[str, Any] = {"ready": False, "models": {}}
+
+
+def _validate_model_dir(path: Path, name: str) -> dict[str, Any]:
+    required_any = {
+        "weights": ["model.safetensors", "pytorch_model.bin", "tf_model.h5"],
+        "tokenizer": ["tokenizer.json", "vocab.txt", "spiece.model"],
+    }
+    if not path.exists() or not path.is_dir():
+        raise RuntimeError(f"{name} model directory does not exist: {path}")
+
+    files = {child.name for child in path.iterdir() if child.is_file()}
+    missing = []
+    if "config.json" not in files:
+        missing.append("config.json")
+    for group, options in required_any.items():
+        if not any(option in files for option in options):
+            missing.append(f"one of {options}")
+
+    if missing:
+        raise RuntimeError(f"{name} model directory is incomplete at {path}; missing {', '.join(missing)}")
+
+    return {"path": str(path), "files": sorted(files)}
+
+
+def _scores(result: dict[str, Any]) -> dict[str, float]:
+    raw_scores = result.get("scores") or result.get("all_scores", {}).get("fused") or {}
+    scores = {label: round(float(raw_scores.get(label, 0.0)), 4) for label in LABELS}
+    total = sum(scores.values())
+    if total <= 0:
+        label = result.get("label", "Public")
+        confidence = float(result.get("confidence") or 0.0)
+        scores = {item: 0.0 for item in LABELS}
+        scores[label if label in scores else "Public"] = round(confidence, 4)
+        total = sum(scores.values())
+    if total > 0 and abs(total - 1.0) > 0.05:
+        scores = {label: round(value / total, 4) for label, value in scores.items()}
+    return scores
+
+
+def _normalize_response(result: dict[str, Any], channel: str) -> dict[str, Any]:
+    label = result.get("label") if result.get("label") in LABELS else "Public"
+    return {
+        "label": label,
+        "confidence": round(float(result.get("confidence") or 0.0), 4),
+        "scores": _scores(result),
+        "context_domain": result.get("context_domain") or result.get("primary_domain") or "General",
+        "compliance_tags": list(result.get("compliance_tags") or []),
+        "channel": channel,
+        "language": result.get("language") or "en",
+    }
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize and Warm-up
-    global orchestrator
-    print("[API] Starting up: Initializing AI Orchestrator...")
+    global orchestrator, startup_status
+    print("[API] Validating model directories...")
+    startup_status["models"] = {
+        "distilbert": _validate_model_dir(DISTILBERT_MODEL_PATH, "DistilBERT"),
+        "arabert": _validate_model_dir(ARABERT_MODEL_PATH, "AraBERT"),
+    }
+    print("[API] Starting AI orchestrator...")
     orchestrator = AIOrchestrator()
     print("[API] Warming up models...")
-    # Warm-up request to force loading of weights into memory
-    orchestrator.classify({"text": "warmup", "metadata": {"channel": "web"}})
-    print("[API] AI Orchestrator Ready.")
+    orchestrator.classify({"text": "warmup", "metadata": {"channel": "management"}})
+    startup_status["ready"] = True
+    print("[API] AI inference service ready.")
     yield
-    # Shutdown: Clean up if necessary
+    startup_status["ready"] = False
     print("[API] Shutting down.")
+
 
 app = FastAPI(title="DLPEco AI Inference API", version="1.0.0", lifespan=lifespan)
 
-async def verify_token(x_ai_token: str = Header(None)):
-    if x_ai_token != AI_SERVICE_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid or missing X-AI-Token")
+
+def verify_token(x_api_key: str = Header(None, alias="X-API-Key")) -> None:
+    if x_api_key != AI_SERVICE_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid or missing X-API-Key")
+
 
 class ClassifyPayload(BaseModel):
     text: Optional[str] = ""
-    metadata: Optional[Dict[str, Any]] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
 
 class EmailPayload(BaseModel):
     raw_email: Optional[str] = ""
     subject: Optional[str] = ""
     body: Optional[str] = ""
+    body_text: Optional[str] = ""
     from_addr: Optional[str] = ""
-    to_addrs: Optional[List[str]] = []
+    to_addrs: List[str] = Field(default_factory=list)
+    attachment_filenames: List[str] = Field(default_factory=list)
     attachment_text: Optional[str] = ""
-    metadata: Optional[Dict[str, Any]] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
 
 class WebPayload(BaseModel):
     raw_http: Optional[str] = ""
     url: Optional[str] = ""
+    method: Optional[str] = ""
+    request_body_snippet: Optional[str] = ""
     content: Optional[str] = ""
+    content_type: Optional[str] = ""
+    destination_domain: Optional[str] = ""
+    user_agent: Optional[str] = ""
     file_text: Optional[str] = ""
-    metadata: Optional[Dict[str, Any]] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "timestamp": time.time()}
+    return {"status": "healthy" if startup_status["ready"] else "starting", "timestamp": time.time()}
+
 
 @app.post("/classify")
-async def classify(payload: ClassifyPayload, x_ai_token: str = Header(None)):
-    await verify_token(x_ai_token)
-    # Using model_dump() for Pydantic v2
-    return orchestrator.classify(payload.model_dump())
+async def classify(payload: ClassifyPayload, x_api_key: str = Header(None, alias="X-API-Key")):
+    verify_token(x_api_key)
+    result = orchestrator.classify(payload.model_dump())
+    channel = payload.metadata.get("channel") or "ManagementChannel"
+    return _normalize_response(result, str(channel))
+
 
 @app.post("/classify_email")
-async def classify_email(payload: EmailPayload, x_ai_token: str = Header(None)):
-    await verify_token(x_ai_token)
-    return orchestrator.classify_email(**payload.model_dump())
+async def classify_email(payload: EmailPayload, x_api_key: str = Header(None, alias="X-API-Key")):
+    verify_token(x_api_key)
+    body = payload.body or payload.body_text or ""
+    metadata = dict(payload.metadata)
+    metadata.setdefault("attachment_filenames", payload.attachment_filenames)
+    metadata.setdefault("attachment_count", len(payload.attachment_filenames))
+    result = orchestrator.classify_email(
+        raw_email=payload.raw_email or "",
+        subject=payload.subject or "",
+        body=body,
+        from_addr=payload.from_addr or "",
+        to_addrs=payload.to_addrs,
+        attachment_text=payload.attachment_text or "",
+        metadata=metadata,
+    )
+    return _normalize_response(result, "EmailChannel")
+
 
 @app.post("/classify_web")
-async def classify_web(payload: WebPayload, x_ai_token: str = Header(None)):
-    await verify_token(x_ai_token)
-    return orchestrator.classify_web(**payload.model_dump())
+async def classify_web(payload: WebPayload, x_api_key: str = Header(None, alias="X-API-Key")):
+    verify_token(x_api_key)
+    metadata = dict(payload.metadata)
+    if payload.method:
+        metadata.setdefault("method", payload.method.upper())
+        metadata.setdefault("protocol", "HTTP")
+    if payload.content_type:
+        metadata.setdefault("content_type", payload.content_type)
+    if payload.destination_domain:
+        metadata.setdefault("host", payload.destination_domain)
+    if payload.user_agent:
+        metadata.setdefault("user_agent", payload.user_agent)
+    content = payload.content or payload.request_body_snippet or ""
+    result = orchestrator.classify_web(
+        raw_http=payload.raw_http or "",
+        url=payload.url or "",
+        content=content,
+        file_text=payload.file_text or "",
+        metadata=metadata,
+    )
+    return _normalize_response(result, "WebChannel")
+
 
 if __name__ == "__main__":
-    uvicorn.run("inference_api:app", host="0.0.0.0", port=8001, reload=False)
+    uvicorn.run("ai.inference_api:app", host="0.0.0.0", port=8001, reload=False)
