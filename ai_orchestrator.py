@@ -53,8 +53,9 @@ import numpy as np
 from pathlib import Path
 
 # ── MODEL PATHS ───────────────────────────────────────────────────────────
-DISTILBERT_PATH = "ai/models/finetuned_distilbert"
-ARABERT_PATH    = "ai/models/finetuned_arabert"
+_BASE = Path(__file__).parent
+DISTILBERT_PATH = str(_BASE / "models/finetuned_distilbert")
+ARABERT_PATH    = str(_BASE / "models/finetuned_arabert")
 
 # ── LABELS ────────────────────────────────────────────────────────────────
 LABELS   = ["Public", "Internal", "Confidential", "Restricted"]
