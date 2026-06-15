@@ -71,6 +71,26 @@ def _normalize_response(result: dict[str, Any], channel: str) -> dict[str, Any]:
     }
 
 
+def _log_result(desc: str, r: dict[str, Any]):
+    import sys
+    ch = r.get("channel", {})
+    lm = r.get("llm", {})
+    print(f"\n[{desc}]")
+    print(f"  Label       : {r.get('label')} ({r.get('confidence', 0):.2%})")
+    print(f"  Domain      : {r.get('primary_domain')} → {r.get('domains')}")
+    print(f"  Language    : {r.get('language')}")
+    print(f"  Channel     : ext={ch.get('is_external')} "
+          f"cloud={ch.get('is_cloud_host')} "
+          f"dir={ch.get('direction')} "
+          f"fired={ch.get('channel_fired')}")
+    print(f"  Compliance  : {r.get('compliance_tags')}")
+    print(f"  LLM model   : {lm.get('model_used')} (fallback={lm.get('fallback')})")
+    print(f"  LLM context : {lm.get('business_context')}")
+    print(f"  LLM signals : {lm.get('sensitivity_indicators')}")
+    print(f"  Latency     : {r.get('latency_ms', 0)}ms")
+    sys.stdout.flush()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global orchestrator, startup_status
@@ -138,6 +158,7 @@ async def classify(payload: ClassifyPayload, x_api_key: str = Header(None, alias
     verify_token(x_api_key)
     result = orchestrator.classify(payload.model_dump())
     channel = payload.metadata.get("channel") or "ManagementChannel"
+    _log_result("Classify: Generic request", result)
     return _normalize_response(result, str(channel))
 
 
@@ -157,6 +178,8 @@ async def classify_email(payload: EmailPayload, x_api_key: str = Header(None, al
         attachment_text=payload.attachment_text or "",
         metadata=metadata,
     )
+    desc = f"Email: {payload.subject}" if payload.subject else "Email: No subject"
+    _log_result(desc, result)
     return _normalize_response(result, "EmailChannel")
 
 
@@ -181,6 +204,8 @@ async def classify_web(payload: WebPayload, x_api_key: str = Header(None, alias=
         file_text=payload.file_text or "",
         metadata=metadata,
     )
+    desc = f"Web: {payload.url}" if payload.url else "Web: Request"
+    _log_result(desc, result)
     return _normalize_response(result, "WebChannel")
 
 
