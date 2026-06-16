@@ -1,3 +1,5 @@
+import json
+import logging
 import os
 import time
 from contextlib import asynccontextmanager
@@ -9,6 +11,8 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from ai.ai_orchestrator import AIOrchestrator, LABELS
+
+logger = logging.getLogger("ai_service")
 
 AI_SERVICE_TOKEN = os.getenv("AI_SERVICE_TOKEN")
 if not AI_SERVICE_TOKEN:
@@ -58,14 +62,39 @@ def _scores(result: dict[str, Any]) -> dict[str, float]:
     return scores
 
 
+def _filter_indicators_by_scope(
+    indicators: list[str], scopes: list[str]
+) -> list[str]:
+    """Keep only indicators matching any scope (case-insensitive substring)."""
+    if not scopes:
+        return list(indicators)
+    scopes_lower = [s.lower() for s in scopes]
+    filtered = []
+    for v in (indicators or []):
+        v_low = v.lower()
+        match = any(s in v_low or v_low in s for s in scopes_lower)
+        if not match and "national_id" in scopes_lower and "nid" in v_low:
+            match = True
+        if match:
+            filtered.append(v)
+    return filtered
+
+
+def _downgrade_if_required_signals_miss(
+    result: dict[str, Any], required_signals: list[str]
+) -> None:
+    """Set label to Internal when none of the required signals are present."""
+    if not required_signals:
+        return
+    violations = (result.get("llm") or {}).get("sensitivity_indicators") or []
+    if not any(v in required_signals for v in violations):
+        result["label"] = "Internal"
+
+
 def _normalize_response(result: dict[str, Any], channel: str) -> dict[str, Any]:
     label = result.get("label") if result.get("label") in LABELS else "Public"
     
-    # Extract specific violations from the result (could be in llm info or top level)
-    violations = list(result.get("violations") or [])
-    if not violations:
-        llm_info = result.get("llm") or {}
-        violations = list(llm_info.get("sensitivity_indicators") or [])
+    violations = list((result.get("llm") or {}).get("sensitivity_indicators") or [])
     
     return {
         "label": label,
@@ -80,23 +109,23 @@ def _normalize_response(result: dict[str, Any], channel: str) -> dict[str, Any]:
 
 
 def _log_result(desc: str, r: dict[str, Any]):
-    import sys
     ch = r.get("channel", {})
     lm = r.get("llm", {})
-    print(f"\n[{desc}]")
-    print(f"  Label       : {r.get('label')} ({r.get('confidence', 0):.2%})")
-    print(f"  Domain      : {r.get('primary_domain')} → {r.get('domains')}")
-    print(f"  Language    : {r.get('language')}")
-    print(f"  Channel     : ext={ch.get('is_external')} "
-          f"cloud={ch.get('is_cloud_host')} "
-          f"dir={ch.get('direction')} "
-          f"fired={ch.get('channel_fired')}")
-    print(f"  Compliance  : {r.get('compliance_tags')}")
-    print(f"  LLM model   : {lm.get('model_used')} (fallback={lm.get('fallback')})")
-    print(f"  LLM context : {lm.get('business_context')}")
-    print(f"  LLM signals : {lm.get('sensitivity_indicators')}")
-    print(f"  Latency     : {r.get('latency_ms', 0)}ms")
-    sys.stdout.flush()
+    entry = {
+        "event": "classification",
+        "desc": desc,
+        "label": r.get("label"),
+        "confidence": r.get("confidence"),
+        "domain": r.get("primary_domain"),
+        "language": r.get("language"),
+        "violations": lm.get("sensitivity_indicators") or [],
+        "compliance_tags": r.get("compliance_tags", []),
+        "latency_ms": r.get("latency_ms", 0),
+        "channel_fired": ch.get("channel_fired", False),
+        "model_used": lm.get("model_used", "none"),
+        "business_context": lm.get("business_context", ""),
+    }
+    logger.info(json.dumps(entry))
 
 
 @asynccontextmanager
@@ -129,6 +158,7 @@ def verify_token(x_api_key: str = Header(None, alias="X-API-Key")) -> None:
 class ClassifyPayload(BaseModel):
     text: Optional[str] = ""
     scan_scope: Optional[List[str]] = Field(default_factory=list)
+    required_signals: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -142,6 +172,7 @@ class EmailPayload(BaseModel):
     attachment_filenames: List[str] = Field(default_factory=list)
     attachment_text: Optional[str] = ""
     scan_scope: Optional[List[str]] = Field(default_factory=list)
+    required_signals: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -156,6 +187,7 @@ class WebPayload(BaseModel):
     user_agent: Optional[str] = ""
     file_text: Optional[str] = ""
     scan_scope: Optional[List[str]] = Field(default_factory=list)
+    required_signals: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -172,29 +204,16 @@ async def classify(payload: ClassifyPayload, x_api_key: str = Header(None, alias
     
     # Apply scan_scope filtering
     if payload.scan_scope:
-        scopes_lower = [s.lower() for s in payload.scan_scope]
-        raw_indicators = result["llm"].get("sensitivity_indicators") or []
-        
-        filtered = []
-        for v in raw_indicators:
-            v_low = v.lower()
-            # Match if scope is in indicator (e.g. "id" in "national_id") 
-            # or indicator is in scope (e.g. "national_id" in "egyptian_national_id")
-            # or fuzzy mapping (e.g. "national_id" matches "egyptian_nid")
-            match = any(s in v_low or v_low in s for s in scopes_lower)
-            
-            # Special case for "national_id" matching "egyptian_nid"
-            if not match and "national_id" in scopes_lower and "nid" in v_low:
-                match = True
-                
-            if match:
-                filtered.append(v)
-        
-        result["llm"]["sensitivity_indicators"] = filtered
-        
-        # If the specific violations requested are NOT found, downgrade label
-        if not filtered and result["label"] == "Restricted":
-            result["label"] = "Internal"
+        llm_info = result.get("llm")
+        if llm_info is not None:
+            llm_info["sensitivity_indicators"] = _filter_indicators_by_scope(
+                llm_info.get("sensitivity_indicators") or [], payload.scan_scope
+            )
+            if not llm_info["sensitivity_indicators"] and result.get("label") == "Restricted":
+                result["label"] = "Internal"
+
+    # Apply required_signals filtering
+    _downgrade_if_required_signals_miss(result, payload.required_signals or [])
 
     _log_result("Classify: Generic request", result)
     return _normalize_response(result, str(channel))
@@ -219,12 +238,16 @@ async def classify_email(payload: EmailPayload, x_api_key: str = Header(None, al
     
     # Apply scan_scope filtering
     if payload.scan_scope:
-        result["llm"]["sensitivity_indicators"] = [
-            v for v in (result["llm"].get("sensitivity_indicators") or [])
-            if v in payload.scan_scope
-        ]
-        if not result["llm"]["sensitivity_indicators"] and result["label"] == "Restricted":
-            result["label"] = "Internal"
+        llm_info = result.get("llm")
+        if llm_info is not None:
+            llm_info["sensitivity_indicators"] = _filter_indicators_by_scope(
+                llm_info.get("sensitivity_indicators") or [], payload.scan_scope
+            )
+            if not llm_info["sensitivity_indicators"] and result.get("label") == "Restricted":
+                result["label"] = "Internal"
+
+    # Apply required_signals filtering
+    _downgrade_if_required_signals_miss(result, payload.required_signals or [])
 
     desc = f"Email: {payload.subject}" if payload.subject else "Email: No subject"
     _log_result(desc, result)
@@ -255,12 +278,16 @@ async def classify_web(payload: WebPayload, x_api_key: str = Header(None, alias=
 
     # Apply scan_scope filtering
     if payload.scan_scope:
-        result["llm"]["sensitivity_indicators"] = [
-            v for v in (result["llm"].get("sensitivity_indicators") or [])
-            if v in payload.scan_scope
-        ]
-        if not result["llm"]["sensitivity_indicators"] and result["label"] == "Restricted":
-            result["label"] = "Internal"
+        llm_info = result.get("llm")
+        if llm_info is not None:
+            llm_info["sensitivity_indicators"] = _filter_indicators_by_scope(
+                llm_info.get("sensitivity_indicators") or [], payload.scan_scope
+            )
+            if not llm_info["sensitivity_indicators"] and result.get("label") == "Restricted":
+                result["label"] = "Internal"
+
+    # Apply required_signals filtering
+    _downgrade_if_required_signals_miss(result, payload.required_signals or [])
 
     desc = f"Web: {payload.url}" if payload.url else "Web: Request"
     _log_result(desc, result)

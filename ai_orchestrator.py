@@ -403,26 +403,8 @@ class AIOrchestrator:
 
     def _load_llm_preprocessor(self, model: str = None):
         def _factory():
-            sys.path.insert(0, str(Path(__file__).parent.parent))
-            if os.getenv("AI_ENABLE_LLM", "0").strip().lower() not in ("1", "true", "yes"):
-                from ai.llm.llm_preprocessor import LocalFallbackPreprocessor
-                print("[Orchestrator] LLM disabled; using LocalFallbackPreprocessor only.")
-                return LocalFallbackPreprocessor()
-            try:
-                from ai.llm.llm_preprocessor import LLMPreprocessor
-                kwargs = {"model": model} if model else {}
-                prep   = LLMPreprocessor(**kwargs)
-                status = prep.status()
-                print(f"[Orchestrator] LLM preprocessor: "
-                      f"mode={status['mode']}  model={status['model']}")
-                return prep
-            except ImportError:
-                print("[Orchestrator] llm_preprocessor.py not found — "
-                      "preprocessing skipped. Place at ai/llm/llm_preprocessor.py")
-                return None
-            except Exception as e:
-                print(f"[Orchestrator] LLM preprocessor failed to load: {e}")
-                return None
+            from ai.llm.llm_preprocessor import LocalFallbackPreprocessor
+            return LocalFallbackPreprocessor()
         return _factory
 
     def _load_context_classifier(self):
@@ -672,7 +654,7 @@ class AIOrchestrator:
         # Only applies when LLM ran successfully (not fallback).
         if (llm_result
                 and llm_result.processed
-                and not llm_result.fallback_used
+                and (not llm_result.fallback_used or llm_result.model_used == "local_fallback_v2")
                 and not llm_result.contains_sensitive_content
                 and not llm_result.sensitivity_indicators):
             if final_label not in ("Public", "Internal"):
