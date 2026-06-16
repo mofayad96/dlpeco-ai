@@ -61,9 +61,11 @@ def _scores(result: dict[str, Any]) -> dict[str, float]:
 def _normalize_response(result: dict[str, Any], channel: str) -> dict[str, Any]:
     label = result.get("label") if result.get("label") in LABELS else "Public"
     
-    # Extract specific violations from the LLM/Preprocessor metadata
-    llm_info = result.get("llm") or {}
-    violations = list(llm_info.get("sensitivity_indicators") or [])
+    # Extract specific violations from the result (could be in llm info or top level)
+    violations = list(result.get("violations") or [])
+    if not violations:
+        llm_info = result.get("llm") or {}
+        violations = list(llm_info.get("sensitivity_indicators") or [])
     
     return {
         "label": label,
