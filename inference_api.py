@@ -60,11 +60,17 @@ def _scores(result: dict[str, Any]) -> dict[str, float]:
 
 def _normalize_response(result: dict[str, Any], channel: str) -> dict[str, Any]:
     label = result.get("label") if result.get("label") in LABELS else "Public"
+    
+    # Extract specific violations from the LLM/Preprocessor metadata
+    llm_info = result.get("llm") or {}
+    violations = list(llm_info.get("sensitivity_indicators") or [])
+    
     return {
         "label": label,
         "confidence": round(float(result.get("confidence") or 0.0), 4),
         "scores": _scores(result),
         "context_domain": result.get("context_domain") or result.get("primary_domain") or "General",
+        "violations": violations,
         "compliance_tags": list(result.get("compliance_tags") or []),
         "channel": channel,
         "language": result.get("language") or "en",
@@ -120,6 +126,7 @@ def verify_token(x_api_key: str = Header(None, alias="X-API-Key")) -> None:
 
 class ClassifyPayload(BaseModel):
     text: Optional[str] = ""
+    scan_scope: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -132,6 +139,7 @@ class EmailPayload(BaseModel):
     to_addrs: List[str] = Field(default_factory=list)
     attachment_filenames: List[str] = Field(default_factory=list)
     attachment_text: Optional[str] = ""
+    scan_scope: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -145,6 +153,7 @@ class WebPayload(BaseModel):
     destination_domain: Optional[str] = ""
     user_agent: Optional[str] = ""
     file_text: Optional[str] = ""
+    scan_scope: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -158,6 +167,17 @@ async def classify(payload: ClassifyPayload, x_api_key: str = Header(None, alias
     verify_token(x_api_key)
     result = orchestrator.classify(payload.model_dump())
     channel = payload.metadata.get("channel") or "ManagementChannel"
+    
+    # Apply scan_scope filtering
+    if payload.scan_scope:
+        result["llm"]["sensitivity_indicators"] = [
+            v for v in (result["llm"].get("sensitivity_indicators") or [])
+            if v in payload.scan_scope
+        ]
+        # If the specific violations requested are NOT found, downgrade label
+        if not result["llm"]["sensitivity_indicators"] and result["label"] == "Restricted":
+            result["label"] = "Internal" # Downgrade to baseline sensitive if specific one missed
+
     _log_result("Classify: Generic request", result)
     return _normalize_response(result, str(channel))
 
@@ -178,6 +198,16 @@ async def classify_email(payload: EmailPayload, x_api_key: str = Header(None, al
         attachment_text=payload.attachment_text or "",
         metadata=metadata,
     )
+    
+    # Apply scan_scope filtering
+    if payload.scan_scope:
+        result["llm"]["sensitivity_indicators"] = [
+            v for v in (result["llm"].get("sensitivity_indicators") or [])
+            if v in payload.scan_scope
+        ]
+        if not result["llm"]["sensitivity_indicators"] and result["label"] == "Restricted":
+            result["label"] = "Internal"
+
     desc = f"Email: {payload.subject}" if payload.subject else "Email: No subject"
     _log_result(desc, result)
     return _normalize_response(result, "EmailChannel")
@@ -204,6 +234,16 @@ async def classify_web(payload: WebPayload, x_api_key: str = Header(None, alias=
         file_text=payload.file_text or "",
         metadata=metadata,
     )
+
+    # Apply scan_scope filtering
+    if payload.scan_scope:
+        result["llm"]["sensitivity_indicators"] = [
+            v for v in (result["llm"].get("sensitivity_indicators") or [])
+            if v in payload.scan_scope
+        ]
+        if not result["llm"]["sensitivity_indicators"] and result["label"] == "Restricted":
+            result["label"] = "Internal"
+
     desc = f"Web: {payload.url}" if payload.url else "Web: Request"
     _log_result(desc, result)
     return _normalize_response(result, "WebChannel")
