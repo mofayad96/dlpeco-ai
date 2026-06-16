@@ -172,13 +172,29 @@ async def classify(payload: ClassifyPayload, x_api_key: str = Header(None, alias
     
     # Apply scan_scope filtering
     if payload.scan_scope:
-        result["llm"]["sensitivity_indicators"] = [
-            v for v in (result["llm"].get("sensitivity_indicators") or [])
-            if v in payload.scan_scope
-        ]
+        scopes_lower = [s.lower() for s in payload.scan_scope]
+        raw_indicators = result["llm"].get("sensitivity_indicators") or []
+        
+        filtered = []
+        for v in raw_indicators:
+            v_low = v.lower()
+            # Match if scope is in indicator (e.g. "id" in "national_id") 
+            # or indicator is in scope (e.g. "national_id" in "egyptian_national_id")
+            # or fuzzy mapping (e.g. "national_id" matches "egyptian_nid")
+            match = any(s in v_low or v_low in s for s in scopes_lower)
+            
+            # Special case for "national_id" matching "egyptian_nid"
+            if not match and "national_id" in scopes_lower and "nid" in v_low:
+                match = True
+                
+            if match:
+                filtered.append(v)
+        
+        result["llm"]["sensitivity_indicators"] = filtered
+        
         # If the specific violations requested are NOT found, downgrade label
-        if not result["llm"]["sensitivity_indicators"] and result["label"] == "Restricted":
-            result["label"] = "Internal" # Downgrade to baseline sensitive if specific one missed
+        if not filtered and result["label"] == "Restricted":
+            result["label"] = "Internal"
 
     _log_result("Classify: Generic request", result)
     return _normalize_response(result, str(channel))
