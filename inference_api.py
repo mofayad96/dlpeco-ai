@@ -165,6 +165,39 @@ def _startup_banner() -> None:
         DEFAULT_MIN_CONFIDENCE * 100,
         bool(API_TOKEN),
     )
+    print("[API] Checking ML dependencies...", flush=True)
+    missing: list[str] = []
+    try:
+        import sentence_transformers  # noqa: F401
+    except ImportError:
+        missing.append("sentence-transformers")
+    try:
+        import sklearn  # noqa: F401
+    except ImportError:
+        missing.append("scikit-learn")
+    if missing:
+        print(f"[API] WARNING: missing packages: {', '.join(missing)}", flush=True)
+        print("[API] Context classifier will fail — run: pip install -r requirements.txt", flush=True)
+    else:
+        print("[API] ML dependencies OK (sentence-transformers, scikit-learn)", flush=True)
+
+    print("[API] Warming up models on startup...", flush=True)
+    try:
+        orch = _orch()
+        # Force-load DistilBERT + context classifier so first email is not slow/fail-open.
+        sample = orch.classify_email(
+            raw_email="Subject: warmup\n\nInternal health-check message for model preload.",
+            metadata={"channel": "email", "direction": "internal", "is_external": False},
+        )
+        print(
+            f"[API] Warmup classify OK — label={sample.get('label')} "
+            f"confidence={float(sample.get('confidence') or 0.0):.0%}",
+            flush=True,
+        )
+    except Exception as exc:
+        print(f"[API] ERROR during model warmup: {exc}", flush=True)
+        raise
+    print("[API] AI inference service ready.", flush=True)
 
 
 @app.get("/health")
