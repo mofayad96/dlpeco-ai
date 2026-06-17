@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-ENV PYTHONUNBUFFERED=1     PYTHONDONTWRITEBYTECODE=1     PYTHONPATH=/app     AI_HOST=0.0.0.0     AI_PORT=8001     AI_ENABLE_LLM=0     DISTILBERT_MODEL_PATH=/app/ai/models/finetuned_distilbert     ARABERT_MODEL_PATH=/app/ai/models/finetuned_arabert     SENTENCE_TRANSFORMERS_HOME=/app/ai/models/sentence_transformers     TRANSFORMERS_OFFLINE=0
+ENV PYTHONUNBUFFERED=1     PYTHONDONTWRITEBYTECODE=1     PYTHONPATH=/app     AI_HOST=0.0.0.0     AI_PORT=8001     DISTILBERT_MODEL_PATH=/app/ai/models/finetuned_distilbert     ARABERT_MODEL_PATH=/app/ai/models/finetuned_arabert     SENTENCE_TRANSFORMERS_HOME=/app/ai/models/sentence_transformers     TRANSFORMERS_OFFLINE=0
 
 WORKDIR /app
 
